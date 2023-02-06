@@ -74,8 +74,8 @@ export class ConversationCommand extends ParentCommand {
 
   private async askAi(user: User, message: Message) {
     return await this._ai.createCompletion({
-      model: 'text-davinci-003',
-      // model: 'text-curie-001',
+      // model: 'text-davinci-003',
+      model: 'text-curie-001',
       prompt: user.conversation(),
       max_tokens: 256,
       temperature: 1,
