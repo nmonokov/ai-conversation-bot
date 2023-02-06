@@ -1,15 +1,14 @@
 import { ParentCommand } from './parent';
 import { Message, PhotoSize } from 'node-telegram-bot-api';
-import fs, { ReadStream } from 'fs';
 import axios, { AxiosResponse } from 'axios';
 import sharp from 'sharp';
 import { logger } from '../utils/logger';
 
 /**
  * Reply on image with /reimagine, and it'll create a variation of the image and send it back to a user.
- * In order to convert an image to PNG format, suitable for OpenAI to digest, the image will be stored
- * on the local disk /images/file_{username}_{chatId}.png for further processing. So basically it will be
- * rewritten for the specific user in the specific chat.
+ * In order to convert an image to PNG format, suitable for OpenAI to digest, the image will be uploaded
+ * as a buffer, the format will be changed to PNG(with sharp) and name added(so OpenAI accepts it)
+ * on the flight and send to OpenAI image variation endpoint.
  */
 export class ReimagineCommand extends ParentCommand {
 
@@ -22,8 +21,8 @@ export class ReimagineCommand extends ParentCommand {
     }
     try {
       const imageResponse: AxiosResponse<Buffer> = await this.requestImage(photo);
-      const imageAsStream: ReadStream = await this.convertToPng(chatId, message.chat.username, imageResponse.data);
-      const imageVariationResponse = await this._ai.createImageVariation(imageAsStream as any, 1, '1024x1024');
+      const buffer: any = await this.convertToPng(imageResponse.data);
+      const imageVariationResponse = await this._ai.createImageVariation(buffer, 1, '1024x1024');
       this._bot.sendPhoto(chatId, imageVariationResponse.data.data[0].url || '');
     } catch (error) {
       logger.error(error);
@@ -38,17 +37,12 @@ export class ReimagineCommand extends ParentCommand {
     return await axios.get(fileLink, { responseType: 'arraybuffer' });
   }
 
-  private async convertToPng(chatId: number, username: string | undefined, data: Buffer): Promise<ReadStream> {
-    const folderPath = `${process.cwd()}/images`;
-    const imagePath = `${folderPath}/file_${username}_${chatId}.png`;
-    const folderExists = fs.existsSync(folderPath);
-    if (!folderExists) {
-      fs.mkdirSync(folderPath);
-    }
-    await sharp(data)
+  private async convertToPng(data: Buffer): Promise<any> {
+    const buffer: any = await sharp(data)
       .resize(1024, 1024)
       .png()
-      .toFile(imagePath);
-    return fs.createReadStream(imagePath);
+      .toBuffer();
+    buffer.name = 'image.png';
+    return buffer;
   }
 }
