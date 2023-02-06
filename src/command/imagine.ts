@@ -1,5 +1,6 @@
 import { ParentCommand } from './parent';
 import { Message } from 'node-telegram-bot-api';
+import { logger } from '../utils/logger';
 
 /**
  * Imagine command /imagine is used to generate an image based on the text provided in the
@@ -15,12 +16,13 @@ export class ImagineCommand extends ParentCommand {
       this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
       return;
     }
-    const imageCreateResponse = await this._ai.createImage({
-      prompt,
-      n: 1,
-      size: '1024x1024',
-    });
-    const url: string = imageCreateResponse.data.data[0].url || 'Not generated';
-    this._bot.sendPhoto(chatId, url);
+    try {
+      const imageCreateResponse = await this._ai.createImage({ prompt, n: 1, size: '1024x1024' });
+      const url: string = imageCreateResponse.data.data[0].url || 'Not generated';
+      this._bot.sendPhoto(chatId, url);
+    } catch (error) {
+      logger.error(error);
+      this._bot.sendMessage(chatId, '[Failed to generate image]');
+    }
   }
 }

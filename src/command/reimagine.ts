@@ -3,6 +3,7 @@ import { Message, PhotoSize } from 'node-telegram-bot-api';
 import fs, { ReadStream } from 'fs';
 import axios, { AxiosResponse } from 'axios';
 import sharp from 'sharp';
+import { logger } from '../utils/logger';
 
 /**
  * Reply on image with /reimagine, and it'll create a variation of the image and send it back to a user.
@@ -19,10 +20,15 @@ export class ReimagineCommand extends ParentCommand {
       this._bot.sendMessage(chatId, 'Reply to an image to reimagine.');
       return;
     }
-    const imageResponse: AxiosResponse<Buffer> = await this.requestImage(photo);
-    const imageAsStream: ReadStream = await this.convertToPng(chatId, message.chat.username, imageResponse.data);
-    const imageVariationResponse = await this._ai.createImageVariation(imageAsStream as any, 1, '1024x1024');
-    this._bot.sendPhoto(chatId, imageVariationResponse.data.data[0].url || '');
+    try {
+      const imageResponse: AxiosResponse<Buffer> = await this.requestImage(photo);
+      const imageAsStream: ReadStream = await this.convertToPng(chatId, message.chat.username, imageResponse.data);
+      const imageVariationResponse = await this._ai.createImageVariation(imageAsStream as any, 1, '1024x1024');
+      this._bot.sendPhoto(chatId, imageVariationResponse.data.data[0].url || '');
+    } catch (error) {
+      logger.error(error);
+      this._bot.sendMessage(chatId, '[Failed to generate image]');
+    }
   }
 
   private async requestImage(photo: PhotoSize[]) {

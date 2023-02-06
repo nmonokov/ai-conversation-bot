@@ -18,7 +18,7 @@ export abstract class ParentCommand {
     users?: { [username: string]: User },
   ): void;
 
-  protected async isProhibited (prompt: string) {
+  protected async isProhibited(prompt: string) {
     const moderationResponse = await this._ai.createModeration({
       model: 'text-moderation-latest',
       input: prompt,

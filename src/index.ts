@@ -13,6 +13,11 @@ const BOT_TOKEN: string = property('BOT_TOKEN');
 const APPLICATION_URL: string = property('APPLICATION_URL');
 const EXPRESS_PORT: string = property('EXPRESS_PORT');
 const OPEN_AI_API_KEY: string = property('OPEN_AI_API_KEY');
+/**
+ * TODO: add OpenAI config
+ * TODO: add AI behavior change
+ * TODO: change /reimagine to a button
+ */
 
 const bot = new TelegramBot(BOT_TOKEN);
 WebHookServer.Builder

@@ -45,8 +45,15 @@ export class ConversationCommand extends ParentCommand {
       return;
     }
 
-    const aiMessage = await this.getAiMessage(message, users, prompt);
-    this._bot.sendMessage(chatId, aiMessage);
+    try {
+      const aiMessage = await this.getAiMessage(message, users, prompt);
+      this._bot.sendMessage(chatId, aiMessage);
+    } catch (error: any) {
+      logger.error(error);
+      if (error?.message.startsWith('Rate limit reached')) {
+        this._bot.sendMessage(chatId, '[You\'re sending too many requests. Please, wait a little bit.]');
+      }
+    }
   }
 
   private async getAiMessage(
