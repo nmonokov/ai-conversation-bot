@@ -17,6 +17,9 @@ const OPEN_AI_API_KEY: string = property('OPEN_AI_API_KEY');
  * TODO: add OpenAI config
  * TODO: add AI behavior change
  * TODO: change /reimagine to a button
+ * TODO: fix /imagine regexp
+ * TODO: Revamp user and bot entries
+ * TODO: Retry if empty AI response
  */
 
 const bot = new TelegramBot(BOT_TOKEN);
