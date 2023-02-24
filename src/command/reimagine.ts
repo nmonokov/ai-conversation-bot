@@ -34,6 +34,7 @@ export class ReimagineCommand extends ParentCommand {
     const largePhoto: PhotoData = photo.reduce((firstPhoto: any, secondPhoto: any) =>
       firstPhoto.file_size > secondPhoto.file_size ? firstPhoto : secondPhoto);
     const fileLink: string = await this._bot.getFileLink(largePhoto.file_id);
+    logger.debug(fileLink);
     return await axios.get(fileLink, { responseType: 'arraybuffer' });
   }
 
