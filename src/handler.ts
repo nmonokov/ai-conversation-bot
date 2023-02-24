@@ -31,7 +31,7 @@ const reimagine: ReimagineCommand = new ReimagineCommand(bot, openai);
 const conversation: ConversationCommand = new ConversationCommand(bot, openai);
 
 const IMAGINE_PREFIX = '/imagine ';
-const REIMAGINE_PREFIX = '/reimagine ';
+const REIMAGINE_PREFIX = '/reimagine';
 
 /**
  * Lambda handler to process message to the Telegram Bot.
@@ -48,6 +48,13 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
       return;
     }
 
+    logger.debug({
+      text,
+      IMAGINE_PREFIX,
+      REIMAGINE_PREFIX,
+      imagine: text.startsWith(IMAGINE_PREFIX),
+      reimagine: text.startsWith(REIMAGINE_PREFIX),
+    })
     if (text.startsWith(IMAGINE_PREFIX)) {
       message.text = text.replace(IMAGINE_PREFIX, '');
       logger.debug({ message: 'inside imagine', text: message.text });
