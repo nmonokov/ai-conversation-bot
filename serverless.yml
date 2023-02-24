@@ -4,7 +4,7 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: eu-central-1
-  stage: ${opt:stage, 'dev'}
+  stage: ${self:custom.stage}
   deploymentBucket:
     name: sls-deploy-${opt:account, 'serverless'}-${self:provider.region}
     serverSideEncryption: AES256
@@ -12,11 +12,14 @@ provider:
     BOT_TOKEN: ${param:bot-token}
     OPEN_AI_KEY: ${param:open-ai-key}
     LOG_LEVEL: ${param:log-level}
-    AI_TEXT_MODEL: ${file(config/${self:provider.stage}.json):openai.textModel}
-    AI_TEMPERATURE: ${file(config/${self:provider.stage}.json):openai.temperature}
-    AI_MAX_TOKENS: ${file(config/${self:provider.stage}.json):openai.maxTokens}
-    AI_FREQUENCY_PENALTY: ${file(config/${self:provider.stage}.json):openai.penalty.frequency}
-    AI_PRESENCE_PENALTY: ${file(config/${self:provider.stage}.json):openai.penalty.presence}
+    AI_TEXT_MODEL: ${file(config/${self:custom.stage}.json):openai.textModel}
+    AI_TEMPERATURE: ${file(config/${self:custom.stage}.json):openai.temperature}
+    AI_MAX_TOKENS: ${file(config/${self:custom.stage}.json):openai.maxTokens}
+    AI_FREQUENCY_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.frequency}
+    AI_PRESENCE_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.presence}
+
+custom:
+  stage: ${opt:stage, 'dev'}
 
 functions:
   botWebhook:
