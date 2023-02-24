@@ -51,26 +51,16 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
       return;
     }
 
-    logger.debug({
-      text,
-      IMAGINE_PREFIX,
-      REIMAGINE_PREFIX,
-      imagine: text.startsWith(IMAGINE_PREFIX),
-      reimagine: text.startsWith(REIMAGINE_PREFIX),
-    })
     if (text.startsWith(IMAGINE_PREFIX)) {
       message.text = text.replace(IMAGINE_PREFIX, '');
-      logger.debug({ message: 'inside imagine', text: message.text });
       await imagine.execute(message);
     } else if (text.startsWith(REIMAGINE_PREFIX)) {
       message.text = text.replace(REIMAGINE_PREFIX, '');
-      logger.debug({ message: 'inside reimagine', text: message.text });
       await reimagine.execute(message);
     } else {
-      logger.debug({ message: 'inside convo', text: message.text });
       await conversation.execute(message, users);
     }
 
-    logger.info('Finished response');
+    logger.debug('Finished response');
   });
 

@@ -16,28 +16,23 @@ export class TelegramBot {
 
   async sendMessage(chatId: number, message: string): Promise<void> {
     const url = `${this._url}/sendMessage?chat_id=${chatId.toString()}&text=${message}`;
-    logger.debug({ message: 'before request', url });
-    const response = await axios.get(url);
-    logger.debug({ message: 'after request', status: response.status, data: response.data });
+    await axios.get(url);
   }
 
   async sendPhoto(chatId: number, photoUrl: string): Promise<void> {
     const url = `${this._url}/sendPhoto?chat_id=${chatId.toString()}&photo=${encodeURIComponent(photoUrl)}`;
-    logger.debug({ message: 'before request', url });
-    const response = await axios.get(url);
-    logger.debug({ message: 'after request', status: response.status, data: response.data });
+    await axios.get(url);
   }
 
   async getFileLink(fileId: string): Promise<string> {
     const url = `${this._url}/getFile?file_id=${fileId}`;
-    logger.debug({ message: 'before request', url });
     const response = await axios.get(url);
     if (!response.data.ok) {
       throw new Error('Failed to get image file data.');
     }
     const data: PhotoData = response.data.result;
     const fullFileUrl = `${this._fileUrl}/${data.file_path}`;
-    logger.debug({ message: 'after request', status: response.status, fullFileUrl, data });
+    logger.debug({ message: 'Response data', data, fullFileUrl });
     return fullFileUrl;
   }
 }

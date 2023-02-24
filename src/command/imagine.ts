@@ -9,7 +9,6 @@ import { Message } from '../model';
 export class ImagineCommand extends ParentCommand {
 
   async execute(message: Message): Promise<void> {
-    logger.debug('inside imagine class');
     const prompt: string = message.text || '';
     const chatId = message.chat.id;
     const prohibited: boolean = await this.isProhibited(prompt);
@@ -17,11 +16,9 @@ export class ImagineCommand extends ParentCommand {
       await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
       return;
     }
-    logger.debug('after prohibited');
     try {
       const imageCreateResponse = await this._ai.createImage({ prompt, n: 1, size: '1024x1024' });
       const url: string = imageCreateResponse.data.data[0].url || 'Not generated';
-      logger.debug('before send photo');
       await this._bot.sendPhoto(chatId, url);
     } catch (error) {
       logger.error(error);
