@@ -66,7 +66,10 @@ export class ConversationCommand extends ParentCommand {
   }
 
   private async askAi(user: User, message: Message, currentAttempt?: number) {
-    currentAttempt = currentAttempt || 0;
+    let attempt = currentAttempt || 0;
+    logger.debug({
+      attempt,
+    });
     const completionResponse: AxiosResponse<CreateCompletionResponse> = await this._ai.createCompletion({
       model: 'text-davinci-003',
       // model: 'text-curie-001',
@@ -78,8 +81,9 @@ export class ConversationCommand extends ParentCommand {
       presence_penalty: 0,
     });
     let aiResponse: string = this.pickChoice(completionResponse.data.choices);
-    if ((!aiResponse || aiResponse === '') && currentAttempt < this._maxAttempts) {
-      aiResponse = await this.askAi(user, message, currentAttempt++);
+    if (aiResponse === '' && attempt < this._maxAttempts) {
+      attempt++;
+      aiResponse = await this.askAi(user, message, attempt);
     }
     return aiResponse;
   }
