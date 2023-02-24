@@ -1,6 +1,7 @@
 export interface User {
   username: string;
-  addEntry(prompt: string): void;
+  addUserEntry(prompt: string): void;
+  addBotEntry(prompt: string): void;
   conversation(): string;
   changeBehaviour(newBehaviour: string): void;
 }

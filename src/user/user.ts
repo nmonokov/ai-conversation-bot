@@ -26,21 +26,17 @@ export class UserContext implements User {
   }
 
   /**
-   * Adds an entry to the _conversationContext array
-   * and trims it if the total number of tokens exceeds the _tokensThreshold
-   * @param prompt to save
+   * Saves user entry. Append with 'You' and 'AI' for better text generation.
    */
-  addEntry(prompt: string): void {
-    const characters: number = prompt.length;
-    const textTokens: number = characters / CHARACTERS_IN_TOKEN;
-    const tokens = this._tokens();
-    if ((textTokens + tokens) > this._tokensThreshold) {
-      this._trimContext();
-    }
-    this._conversationContext.push({
-      tokens: textTokens,
-      value: prompt,
-    });
+  addUserEntry(prompt: string) {
+    this._addEntry(`You: ${prompt}\nAI: `);
+  }
+
+  /**
+   * Saves bot response. Cleans empty lines.
+   */
+  addBotEntry(prompt: string) {
+    this._addEntry(prompt.replace(/\n+/, ''));
   }
 
   /**
@@ -61,6 +57,24 @@ export class UserContext implements User {
   changeBehaviour(newBehaviour: string) {
     this._conversationContext = [];
     this._behaviour = newBehaviour;
+  }
+
+  /**
+   * Adds an entry to the _conversationContext array
+   * and trims it if the total number of tokens exceeds the _tokensThreshold
+   * @param prompt to save
+   */
+  private _addEntry(prompt: string): void {
+    const characters: number = prompt.length;
+    const textTokens: number = characters / CHARACTERS_IN_TOKEN;
+    const tokens = this._tokens();
+    if ((textTokens + tokens) > this._tokensThreshold) {
+      this._trimContext();
+    }
+    this._conversationContext.push({
+      tokens: textTokens,
+      value: prompt,
+    });
   }
 
   private _trimContext() {

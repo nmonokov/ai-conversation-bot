@@ -54,15 +54,11 @@ export class ConversationCommand extends ParentCommand {
     }
   }
 
-  private async getAiMessage(
-    message: Message,
-    users: { [username: string]: User },
-    prompt: string
-  ): Promise<string> {
+  private async getAiMessage(message: Message, users: { [username: string]: User }, prompt: string): Promise<string> {
     const user = this.getUser(message, users);
-    user.addEntry(`You: ${prompt}\nAI: `);
+    user.addUserEntry(prompt);
     const aiResponse = await this.askAi(user, message);
-    user.addEntry(aiResponse);
+    user.addBotEntry(aiResponse);
     return aiResponse || '[Failed to generate message. Try once again.]';
   }
 

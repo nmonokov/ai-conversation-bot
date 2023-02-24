@@ -13,8 +13,6 @@ import { BehaviourCommand } from './command/behave';
 /**
  * TODO: add OpenAI config
  * TODO: change /reimagine to a button
- * TODO: Revamp user and bot entries
- * TODO: Retry if empty AI response
  */
 
 const BOT_TOKEN: string = property('BOT_TOKEN');
