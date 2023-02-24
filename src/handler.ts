@@ -7,6 +7,7 @@ import { ImagineCommand } from './command/imagine';
 import { ReimagineCommand } from './command/reimagine';
 import { ConversationCommand } from './command/conversation';
 import { TelegramBot } from './utils/bot';
+import { handleExecution } from './utils/handlerWrapper';
 
 /**
  * TODO: add OpenAI config
@@ -32,24 +33,24 @@ const conversation: ConversationCommand = new ConversationCommand(bot, openai);
 /**
  * Lambda handler to process message to the Telegram Bot.
  */
-export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const body: any = JSON.parse(event.body || '{}');
-  logger.info({ body });
+export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
+  handleExecution(async () =>{
+    const body: any = JSON.parse(event.body || '{}');
+    logger.info({ body });
 
-  const message: Message = body.message
-  const text: string | undefined = message.text;
-  if (!text) {
-    logger.warn('Invoked with empty text');
-    return { body: '', statusCode: 200};
-  }
+    const message: Message = body.message
+    const text: string | undefined = message.text;
+    if (!text) {
+      logger.warn('Invoked with empty text');
+      return;
+    }
 
-  if (text?.startsWith('/imagine ')) {
-    await imagine.execute(message);
-  } else if (text?.startsWith('/reimagine')) {
-    await reimagine.execute(message);
-  } else {
-    await conversation.execute(message, users);
-  }
-  logger.info('Finished response');
-  return { body: '', statusCode: 200 };
-}
+    if (text?.startsWith('/imagine ')) {
+      await imagine.execute(message);
+    } else if (text?.startsWith('/reimagine')) {
+      await reimagine.execute(message);
+    } else {
+      await conversation.execute(message, users);
+    }
+    logger.info('Finished response');
+  });
