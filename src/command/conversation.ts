@@ -3,7 +3,6 @@ import { logger } from '../utils/logger';
 import { CreateCompletionResponse, CreateCompletionResponseChoicesInner } from 'openai/api';
 import { AxiosResponse } from 'axios';
 import { Message, User } from '../model';
-import { UserContext } from '../user/user';
 
 /**
  * Conversation command class and handles the conversational interactions with the user.
@@ -65,17 +64,11 @@ export class ConversationCommand extends ParentCommand {
     return aiResponse || '[Failed to generate message. Try once again.]';
   }
 
-  private getUser(message: Message, users: { [username: string]: User }) {
-    const username = message.chat.username || '';
-    let user: User = users[username];
-    if (!user) {
-      user = new UserContext(username);
-      users[username] = user;
-    }
-    return user;
-  }
-
   private async askAi(user: User, message: Message) {
+    logger.debug({
+      message: 'Full conversation',
+      convo: user.conversation(),
+    });
     return await this._ai.createCompletion({
       model: 'text-davinci-003',
       // model: 'text-curie-001',

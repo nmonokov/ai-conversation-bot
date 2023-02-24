@@ -8,10 +8,10 @@ import { ReimagineCommand } from './command/reimagine';
 import { ConversationCommand } from './command/conversation';
 import { TelegramBot } from './utils/bot';
 import { handleExecution } from './utils/handlerWrapper';
+import { BehaviourCommand } from './command/behave';
 
 /**
  * TODO: add OpenAI config
- * TODO: add AI behavior change
  * TODO: change /reimagine to a button
  * TODO: Revamp user and bot entries
  * TODO: Retry if empty AI response
@@ -29,9 +29,11 @@ const users: { [username: string]: User } = {};
 const imagine: ImagineCommand = new ImagineCommand(bot, openai);
 const reimagine: ReimagineCommand = new ReimagineCommand(bot, openai);
 const conversation: ConversationCommand = new ConversationCommand(bot, openai);
+const behave: BehaviourCommand = new BehaviourCommand(bot, openai);
 
 const IMAGINE_PREFIX = '/imagine ';
 const REIMAGINE_PREFIX = '/reimagine';
+const BEHAVE_PREFIX = '/behave';
 
 /**
  * Lambda handler to process message to the Telegram Bot.
@@ -55,9 +57,11 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
       message.text = text.replace(IMAGINE_PREFIX, '');
       await imagine.execute(message);
     } else if (text.startsWith(REIMAGINE_PREFIX)) {
-      message.text = text.replace(REIMAGINE_PREFIX, '');
       await reimagine.execute(message);
-    } else {
+    } else if (text.startsWith(BEHAVE_PREFIX)) {
+      await behave.execute(message, users);
+    }
+    else {
       await conversation.execute(message, users);
     }
 

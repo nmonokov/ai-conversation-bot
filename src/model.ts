@@ -2,6 +2,7 @@ export interface User {
   username: string;
   addEntry(prompt: string): void;
   conversation(): string;
+  changeBehaviour(newBehaviour: string): void;
 }
 
 export interface ConversationEntry {

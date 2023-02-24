@@ -12,12 +12,17 @@ export class UserContext implements User {
   private _conversationContext: ConversationEntry[];
   private readonly _tokensThreshold: number;
   private readonly _spliceThreshold: number;
+  private _behaviour: string;
 
   constructor(username: string, tokensThreshold?: number, spliceThreshold?: number) {
     this.username = username;
     this._conversationContext = [];
     this._tokensThreshold = tokensThreshold || 500;
     this._spliceThreshold = spliceThreshold || 250;
+    this._behaviour = 'AI is a chatbot designed to assist users with their inquiries.' +
+      ' Its purpose is to help users find the information they need and answer any questions they may have.' +
+      ' Users are encouraged to describe their issue or question in as much detail as possible, and the chatbot' +
+      ' will do its best to provide a helpful response.';
   }
 
   /**
@@ -45,9 +50,17 @@ export class UserContext implements User {
     const convo: string = this._conversationContext
       .map((entry: ConversationEntry) => entry.value)
       .join('\n');
-    return 'AI is a chatbot designed to bring humor and fun to casual conversations.' +
-      ' Its unmatched comedic skills make it a virtual friend for those seeking a good laugh.' +
-      ' The goal is to bring joy to interactions and be the go-to AI for casual chats.\n\n' + convo;
+    return `${this._behaviour}\n\n${convo}`;
+  }
+
+  /**
+   * Set new behaviour for the chatbot and resets the conversation context
+   * so new behaviour applied.
+   * @param newBehaviour a new behaviour rule to be applied
+   */
+  changeBehaviour(newBehaviour: string) {
+    this._conversationContext = [];
+    this._behaviour = newBehaviour;
   }
 
   private _trimContext() {

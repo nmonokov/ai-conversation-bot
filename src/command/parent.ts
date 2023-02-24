@@ -2,6 +2,7 @@ import { OpenAIApi } from 'openai';
 import { CreateModerationResponseResultsInner } from 'openai/api';
 import { Message, User } from '../model';
 import { TelegramBot } from '../utils/bot';
+import { UserContext } from '../user/user';
 
 export abstract class ParentCommand {
   protected readonly _bot: TelegramBot;
@@ -22,5 +23,15 @@ export abstract class ParentCommand {
     const found: CreateModerationResponseResultsInner | undefined = moderationResponse.data.results
       .find((result: CreateModerationResponseResultsInner) => result.flagged);
     return found !== undefined;
+  }
+
+  protected getUser(message: Message, users: { [username: string]: User }) {
+    const username = message.chat.username || '';
+    let user: User = users[username];
+    if (!user) {
+      user = new UserContext(username);
+      users[username] = user;
+    }
+    return user;
   }
 }
