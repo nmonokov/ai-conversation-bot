@@ -10,12 +10,12 @@ export class ImagineCommand extends ParentCommand {
 
   async execute(message: Message): Promise<void> {
     const prompt: string = message.text || '';
-    const prohibited: boolean = await this.isProhibited(prompt);
     const chatId = message.chat.id;
-    if (prohibited) {
-      await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
-      return;
-    }
+    // const prohibited: boolean = await this.isProhibited(prompt);
+    // if (prohibited) {
+    //   await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
+    //   return;
+    // }
     try {
       const imageCreateResponse = await this._ai.createImage({ prompt, n: 1, size: '1024x1024' });
       const url: string = imageCreateResponse.data.data[0].url || 'Not generated';
