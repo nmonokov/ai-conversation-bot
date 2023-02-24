@@ -11,7 +11,10 @@ phases:
       - SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux --libc=glibc sharp
   build:
     commands:
-      - serverless deploy --stage ${STAGE:dev} --param="bot-token=${BOT_TOKEN}" --param="open-ai-key=${OPEN_AI_KEY}" --param="log-level=${LOG_LEVEL}"
+      - serverless deploy --stage ${STAGE}
+        --param="bot-token=${BOT_TOKEN}"
+        --param="open-ai-key=${OPEN_AI_KEY}"
+        --param="log-level=${LOG_LEVEL}"
 
 cache:
   paths:

@@ -11,7 +11,7 @@ export class BehaviourCommand extends ParentCommand {
   async execute(message: Message, users: { [username: string]: User }): Promise<void> {
     const chatId = message.chat.id;
     const prompt = message.text || '';
-    const prohibited: boolean = await this.isProhibited(prompt);
+    const prohibited: boolean = await this._ai.isProhibited(prompt);
     if (prohibited) {
       await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
       return;
