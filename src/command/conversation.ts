@@ -23,6 +23,8 @@ import { Message, User } from '../model';
  */
 export class ConversationCommand extends ParentCommand {
 
+  private readonly _maxAttempts = 3;
+
   async execute(message: Message, users: { [username: string]: User }): Promise<void> {
     const chatId = message.chat.id;
     const prompt = message.text || '';
@@ -58,18 +60,14 @@ export class ConversationCommand extends ParentCommand {
   ): Promise<string> {
     const user = this.getUser(message, users);
     user.addEntry(`You: ${prompt}\nAI: `);
-    const completionResponse: AxiosResponse<CreateCompletionResponse> = await this.askAi(user, message);
-    const aiResponse: string = this.pickChoice(completionResponse.data.choices);
+    const aiResponse = await this.askAi(user, message);
     user.addEntry(aiResponse);
     return aiResponse || '[Failed to generate message. Try once again.]';
   }
 
-  private async askAi(user: User, message: Message) {
-    logger.debug({
-      message: 'Full conversation',
-      convo: user.conversation(),
-    });
-    return await this._ai.createCompletion({
+  private async askAi(user: User, message: Message, currentAttempt?: number) {
+    currentAttempt = currentAttempt || 0;
+    const completionResponse: AxiosResponse<CreateCompletionResponse> = await this._ai.createCompletion({
       model: 'text-davinci-003',
       // model: 'text-curie-001',
       prompt: user.conversation(),
@@ -79,6 +77,11 @@ export class ConversationCommand extends ParentCommand {
       frequency_penalty: 1,
       presence_penalty: 0,
     });
+    let aiResponse: string = this.pickChoice(completionResponse.data.choices);
+    if ((!aiResponse || aiResponse === '') && currentAttempt < this._maxAttempts) {
+      aiResponse = await this.askAi(user, message, currentAttempt++);
+    }
+    return aiResponse;
   }
 
   private pickChoice(choices: CreateCompletionResponseChoicesInner[]): string {

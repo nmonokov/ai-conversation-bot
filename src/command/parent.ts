@@ -1,7 +1,7 @@
 import { OpenAIApi } from 'openai';
 import { CreateModerationResponseResultsInner } from 'openai/api';
 import { Message, User } from '../model';
-import { TelegramBot } from '../utils/bot';
+import { TelegramBot } from '../wrappers/bot';
 import { UserContext } from '../user/user';
 
 export abstract class ParentCommand {

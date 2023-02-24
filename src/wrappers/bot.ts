@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { PhotoData } from '../model';
-import { logger } from './logger';
+import { logger } from '../utils/logger';
 
 /**
  * Wrapper for Telegram Bot Api.

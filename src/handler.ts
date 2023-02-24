@@ -6,8 +6,8 @@ import { Message, User } from './model';
 import { ImagineCommand } from './command/imagine';
 import { ReimagineCommand } from './command/reimagine';
 import { ConversationCommand } from './command/conversation';
-import { TelegramBot } from './utils/bot';
-import { handleExecution } from './utils/handlerWrapper';
+import { TelegramBot } from './wrappers/bot';
+import { handleExecution } from './wrappers/handlerWrapper';
 import { BehaviourCommand } from './command/behave';
 
 /**
