@@ -36,6 +36,7 @@ export class ConversationCommand extends ParentCommand {
       logger.debug('Skipping conversation.');
       return;
     }
+
     const prohibited: boolean = await this.isProhibited(prompt);
     if (prohibited) {
       await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
@@ -66,9 +67,11 @@ export class ConversationCommand extends ParentCommand {
   }
 
   private async askAi(user: User, message: Message, currentAttempt?: number) {
-    let attempt = currentAttempt || 0;
+    let attempt = currentAttempt || 1;
     logger.debug({
       attempt,
+      username: message.chat.username,
+      text: message.text,
     });
     const completionResponse: AxiosResponse<CreateCompletionResponse> = await this._ai.createCompletion({
       model: 'text-davinci-003',
@@ -81,7 +84,7 @@ export class ConversationCommand extends ParentCommand {
       presence_penalty: 0,
     });
     let aiResponse: string = this.pickChoice(completionResponse.data.choices);
-    if (aiResponse === '' && attempt < this._maxAttempts) {
+    if (aiResponse === '' && attempt <= this._maxAttempts) {
       attempt++;
       aiResponse = await this.askAi(user, message, attempt);
     }
@@ -107,6 +110,6 @@ export class ConversationCommand extends ParentCommand {
         reason: choice.finish_reason,
       });
     }
-    return '';
+    return choice.text || '';
   }
 }
