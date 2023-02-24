@@ -32,7 +32,10 @@ export class TelegramBot {
     const url = `${this._url}/getFile?file_id=${fileId}`;
     logger.debug({ message: 'before request', url });
     const response = await axios.get(url);
-    const data: PhotoData = response.data;
+    if (!response.data.ok) {
+      throw new Error('Failed to get image file data.');
+    }
+    const data: PhotoData = response.data.result;
     const fullFileUrl = `${this._fileUrl}/${data.file_path}`;
     logger.debug({ message: 'after request', status: response.status, fullFileUrl, data });
     return fullFileUrl;

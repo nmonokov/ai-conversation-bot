@@ -39,7 +39,10 @@ const REIMAGINE_PREFIX = '/reimagine';
 export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
   await handleExecution(async () =>{
     const body: any = JSON.parse(event.body || '{}');
-    logger.debug({ body });
+    logger.debug({
+      message: 'Capturing message.',
+      body,
+    });
 
     const message: Message = body?.message
     const text: string | undefined = message?.text;
