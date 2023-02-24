@@ -1,6 +1,5 @@
 import { ParentCommand } from './parent';
 import axios, { AxiosResponse } from 'axios';
-import sharp from 'sharp';
 import { logger } from '../utils/logger';
 import { Message, PhotoData } from '../model';
 
@@ -21,9 +20,8 @@ export class ReimagineCommand extends ParentCommand {
     }
     try {
       const imageResponse: AxiosResponse<Buffer> = await this.requestImage(photo);
-      const buffer: any = await this.convertToPng(imageResponse.data);
-      const imageVariationResponse = await this._ai.createImageVariation(buffer, 1, '1024x1024');
-      await this._bot.sendPhoto(chatId, imageVariationResponse.data.data[0].url || '');
+      const imageUrl: string = await this._ai.generateVariation(imageResponse.data);
+      await this._bot.sendPhoto(chatId, imageUrl);
     } catch (error) {
       logger.error(error);
       await this._bot.sendMessage(chatId, '[Failed to generate image]');
@@ -38,12 +36,5 @@ export class ReimagineCommand extends ParentCommand {
     return await axios.get(fileLink, { responseType: 'arraybuffer' });
   }
 
-  private async convertToPng(data: Buffer): Promise<any> {
-    const buffer: any = await sharp(data)
-      .resize(1024, 1024)
-      .png()
-      .toBuffer();
-    buffer.name = 'image.png';
-    return buffer;
-  }
+
 }

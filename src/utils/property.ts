@@ -1,6 +1,6 @@
 /**
  * To be sure we have necessary properties set here is a check
- * with an error thrown if property is missing. Also it is possible to have a default value.
+ * with an error thrown if property is missing. Also, it is possible to have a default value.
  *
  * @param name environment variable name
  * @param defaultValue optional

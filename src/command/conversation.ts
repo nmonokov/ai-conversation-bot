@@ -1,7 +1,5 @@
 import { ParentCommand } from './parent';
 import { logger } from '../utils/logger';
-import { CreateCompletionResponse, CreateCompletionResponseChoicesInner } from 'openai/api';
-import { AxiosResponse } from 'axios';
 import { Message, User } from '../model';
 
 /**
@@ -37,7 +35,7 @@ export class ConversationCommand extends ParentCommand {
       return;
     }
 
-    const prohibited: boolean = await this.isProhibited(prompt);
+    const prohibited: boolean = await this._ai.isProhibited(prompt);
     if (prohibited) {
       await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
       return;
@@ -57,55 +55,22 @@ export class ConversationCommand extends ParentCommand {
   private async getAiMessage(message: Message, users: { [username: string]: User }, prompt: string): Promise<string> {
     const user = this.getUser(message, users);
     user.addUserEntry(prompt);
-    const aiResponse = await this.askAi(user, message);
+    const aiResponse = await this.askAi(user);
     user.addBotEntry(aiResponse);
     return aiResponse || '[Failed to generate message. Try once again.]';
   }
 
-  private async askAi(user: User, message: Message, currentAttempt?: number) {
+  private async askAi(user: User, currentAttempt?: number) {
     let attempt = currentAttempt || 1;
     logger.debug({
       attempt,
-      username: message.chat.username,
-      text: message.text,
+      username: user.username,
     });
-    const completionResponse: AxiosResponse<CreateCompletionResponse> = await this._ai.createCompletion({
-      model: 'text-davinci-003',
-      // model: 'text-curie-001',
-      prompt: user.conversation(),
-      max_tokens: 256,
-      temperature: 1,
-      user: message.chat.username,
-      frequency_penalty: 1,
-      presence_penalty: 0,
-    });
-    let aiResponse: string = this.pickChoice(completionResponse.data.choices);
+    let aiResponse: string = await this._ai.generateAnswer(user.conversation(), user.username);
     if (aiResponse === '' && attempt <= this._maxAttempts) {
       attempt++;
-      aiResponse = await this.askAi(user, message, attempt);
+      aiResponse = await this.askAi(user, attempt);
     }
     return aiResponse;
-  }
-
-  private pickChoice(choices: CreateCompletionResponseChoicesInner[]): string {
-    choices.sort((
-      firstChoice: CreateCompletionResponseChoicesInner,
-      secondChoice: CreateCompletionResponseChoicesInner
-    ) => {
-      if (firstChoice.finish_reason === 'stop') {
-        return -1;
-      } else if (secondChoice.finish_reason === 'stop') {
-        return 1;
-      }
-      return 0;
-    });
-    const choice = choices[0];
-    if (choice.finish_reason !== 'stop') {
-      logger.warn({
-        message: 'Failed to fully generate the message',
-        reason: choice.finish_reason,
-      });
-    }
-    return choice.text || '';
   }
 }

@@ -1,29 +1,18 @@
-import { OpenAIApi } from 'openai';
-import { CreateModerationResponseResultsInner } from 'openai/api';
 import { Message, User } from '../model';
 import { TelegramBot } from '../wrappers/bot';
 import { UserContext } from '../user/user';
+import { OpenAi } from '../wrappers/openai';
 
 export abstract class ParentCommand {
   protected readonly _bot: TelegramBot;
-  protected readonly _ai: OpenAIApi;
+  protected readonly _ai: OpenAi;
 
-  constructor(bot: TelegramBot, ai: OpenAIApi) {
+  constructor(bot: TelegramBot, ai: OpenAi) {
     this._bot = bot;
     this._ai = ai;
   }
 
   abstract execute(message: Message, users?: { [username: string]: User }): void;
-
-  protected async isProhibited(prompt: string) {
-    const moderationResponse = await this._ai.createModeration({
-      model: 'text-moderation-latest',
-      input: prompt,
-    });
-    const found: CreateModerationResponseResultsInner | undefined = moderationResponse.data.results
-      .find((result: CreateModerationResponseResultsInner) => result.flagged);
-    return found !== undefined;
-  }
 
   protected getUser(message: Message, users: { [username: string]: User }) {
     const username = message.chat.username || '';

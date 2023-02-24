@@ -11,15 +11,14 @@ export class ImagineCommand extends ParentCommand {
   async execute(message: Message): Promise<void> {
     const prompt: string = message.text || '';
     const chatId = message.chat.id;
-    const prohibited: boolean = await this.isProhibited(prompt);
+    const prohibited: boolean = await this._ai.isProhibited(prompt);
     if (prohibited) {
       await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
       return;
     }
     try {
-      const imageCreateResponse = await this._ai.createImage({ prompt, n: 1, size: '1024x1024' });
-      const url: string = imageCreateResponse.data.data[0].url || 'Not generated';
-      await this._bot.sendPhoto(chatId, url);
+      const imageUrl = await this._ai.generateImage(prompt);
+      await this._bot.sendPhoto(chatId, imageUrl);
     } catch (error) {
       logger.error(error);
       await this._bot.sendMessage(chatId, '[Failed to generate image]');
