@@ -103,6 +103,6 @@ export class ConversationCommand extends ParentCommand {
         reason: choice.finish_reason,
       });
     }
-    return choice.text || '';
+    return '';
   }
 }
