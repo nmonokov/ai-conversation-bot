@@ -25,6 +25,7 @@ import { UserContext } from '../user/user';
 export class ConversationCommand extends ParentCommand {
 
   async execute(message: Message, users: { [username: string]: User }): Promise<void> {
+    logger.debug('inside convo class');
     const chatId = message.chat.id;
     const prompt = message.text || '';
     if (prompt.startsWith('/')
@@ -34,15 +35,17 @@ export class ConversationCommand extends ParentCommand {
     ) {
       return;
     }
-    // const prohibited: boolean = await this.isProhibited(prompt);
-    // if (prohibited) {
-    //   await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
-    //   return;
-    // }
+    const prohibited: boolean = await this.isProhibited(prompt);
+    if (prohibited) {
+      await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
+      return;
+    }
 
     try {
+      logger.debug('before convo generation');
       const aiMessage = await this.getAiMessage(message, users, prompt);
       await this._bot.sendMessage(chatId, aiMessage);
+      logger.debug('after send message');
     } catch (error: any) {
       logger.error(error);
       if (error?.message.startsWith('Rate limit reached')) {

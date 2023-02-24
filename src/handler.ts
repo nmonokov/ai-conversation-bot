@@ -39,7 +39,7 @@ const REIMAGINE_PREFIX = '/reimagine ';
 export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
   handleExecution(async () =>{
     const body: any = JSON.parse(event.body || '{}');
-    logger.info({ body });
+    logger.debug({ body });
 
     const message: Message = body.message
     const text: string | undefined = message.text;
@@ -50,11 +50,14 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
 
     if (text.startsWith(IMAGINE_PREFIX)) {
       message.text = text.replace(IMAGINE_PREFIX, '');
+      logger.debug({ message: 'inside imagine', text: message.text });
       await imagine.execute(message);
     } else if (text.startsWith(REIMAGINE_PREFIX)) {
       message.text = text.replace(REIMAGINE_PREFIX, '');
+      logger.debug({ message: 'inside reimagine', text: message.text });
       await reimagine.execute(message);
     } else {
+      logger.debug({ message: 'inside reimagine', text: message.text });
       await conversation.execute(message, users);
     }
     logger.info('Finished response');
