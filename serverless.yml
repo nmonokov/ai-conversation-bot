@@ -10,6 +10,7 @@ provider:
   environment:
     BOT_TOKEN: ${param:bot-token}
     OPEN_AI_KEY: ${param:open-ai-key}
+    LOG_LEVEL: ${param:log-level}
 
 functions:
   botWebhook:
