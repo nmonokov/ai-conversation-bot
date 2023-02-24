@@ -34,11 +34,11 @@ export class ConversationCommand extends ParentCommand {
     ) {
       return;
     }
-    const prohibited: boolean = await this.isProhibited(prompt);
-    if (prohibited) {
-      await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
-      return;
-    }
+    // const prohibited: boolean = await this.isProhibited(prompt);
+    // if (prohibited) {
+    //   await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
+    //   return;
+    // }
 
     try {
       const aiMessage = await this.getAiMessage(message, users, prompt);

@@ -15,7 +15,7 @@ functions:
   botWebhook:
     handler: src/handler.botWebhook
     memorySize: 512
-    timeout: 900
+    timeout: 60
     events:
       - http:
           path: conversation-webhook${self:provider.environment.BOT_TOKEN}
