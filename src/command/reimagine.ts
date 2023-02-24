@@ -1,8 +1,8 @@
 import { ParentCommand } from './parent';
-import { Message, PhotoSize } from 'node-telegram-bot-api';
 import axios, { AxiosResponse } from 'axios';
 import sharp from 'sharp';
 import { logger } from '../utils/logger';
+import { Message, PhotoData } from '../model';
 
 /**
  * Reply on image with /reimagine, and it'll create a variation of the image and send it back to a user.
@@ -16,22 +16,22 @@ export class ReimagineCommand extends ParentCommand {
     const chatId = message.chat.id;
     const photo = message.reply_to_message?.photo;
     if (!photo) {
-      this._bot.sendMessage(chatId, 'Reply to an image to reimagine.');
+      await this._bot.sendMessage(chatId, 'Reply to an image to reimagine.');
       return;
     }
     try {
       const imageResponse: AxiosResponse<Buffer> = await this.requestImage(photo);
       const buffer: any = await this.convertToPng(imageResponse.data);
       const imageVariationResponse = await this._ai.createImageVariation(buffer, 1, '1024x1024');
-      this._bot.sendPhoto(chatId, imageVariationResponse.data.data[0].url || '');
+      await this._bot.sendPhoto(chatId, imageVariationResponse.data.data[0].url || '');
     } catch (error) {
       logger.error(error);
-      this._bot.sendMessage(chatId, '[Failed to generate image]');
+      await this._bot.sendMessage(chatId, '[Failed to generate image]');
     }
   }
 
-  private async requestImage(photo: PhotoSize[]) {
-    const largePhoto: PhotoSize = photo.reduce((firstPhoto: any, secondPhoto: any) =>
+  private async requestImage(photo: PhotoData[]) {
+    const largePhoto: PhotoData = photo.reduce((firstPhoto: any, secondPhoto: any) =>
       firstPhoto.file_size > secondPhoto.file_size ? firstPhoto : secondPhoto);
     const fileLink: string = await this._bot.getFileLink(largePhoto.file_id);
     return await axios.get(fileLink, { responseType: 'arraybuffer' });

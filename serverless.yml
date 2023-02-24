@@ -1,0 +1,26 @@
+service: ai-conversation-bot
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-central-1
+  deploymentBucket:
+    name: sls-deploy-${opt:account, 'serverless'}-${self:provider.region}
+    serverSideEncryption: AES256
+  environment:
+    BOT_TOKEN: ${param:bot-token}
+    OPEN_AI_KEY: ${param:open-ai-key}
+
+functions:
+  botWebhook:
+    handler: src/handler.botWebhook
+    memorySize: 512
+    events:
+      - http:
+          path: conversation-webhook${self:provider.environment.BOT_TOKEN}
+          method: post
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-deployment-bucket
+  - serverless-plugin-include-dependencies

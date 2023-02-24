@@ -1,6 +1,3 @@
-# Dist files
-dist/
-
 # Node modules
 node_modules/
 
@@ -20,9 +17,6 @@ coverage/
 # Other files
 .DS_Store
 .env
-logs/
-users/
-images/
 
 # Exclude
 !jest.config.js

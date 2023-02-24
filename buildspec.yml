@@ -1,0 +1,18 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-version:
+      nodejs: latest
+    commands:
+      - npm install -g serverless
+      - npm install
+      - rm -rf node_modules/sharp
+      - SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux --libc=glibc sharp
+  build:
+    commands:
+      - serverless deploy --param="bot-token=${BOT_TOKEN}" --param="open-ai-key=${OPEN_AI_KEY}"
+
+cache:
+  paths:
+    - node_modules

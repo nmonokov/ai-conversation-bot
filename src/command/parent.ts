@@ -1,7 +1,7 @@
-import TelegramBot, { Message } from 'node-telegram-bot-api';
 import { OpenAIApi } from 'openai';
 import { CreateModerationResponseResultsInner } from 'openai/api';
-import { User } from '../model';
+import { Message, User } from '../model';
+import { TelegramBot } from '../utils/bot';
 
 export abstract class ParentCommand {
   protected readonly _bot: TelegramBot;
@@ -12,11 +12,7 @@ export abstract class ParentCommand {
     this._ai = ai;
   }
 
-  abstract execute(
-    message: Message,
-    match?: RegExpExecArray | null,
-    users?: { [username: string]: User },
-  ): void;
+  abstract execute(message: Message, users?: { [username: string]: User }): void;
 
   protected async isProhibited(prompt: string) {
     const moderationResponse = await this._ai.createModeration({

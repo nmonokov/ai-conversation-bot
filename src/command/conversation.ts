@@ -1,9 +1,8 @@
 import { ParentCommand } from './parent';
-import { Message } from 'node-telegram-bot-api';
 import { logger } from '../utils/logger';
 import { CreateCompletionResponse, CreateCompletionResponseChoicesInner } from 'openai/api';
 import { AxiosResponse } from 'axios';
-import { User } from '../model';
+import { Message, User } from '../model';
 import { UserContext } from '../user/user';
 
 /**
@@ -25,11 +24,7 @@ import { UserContext } from '../user/user';
  */
 export class ConversationCommand extends ParentCommand {
 
-  async execute(
-    message: Message,
-    match: RegExpExecArray | null,
-    users: { [username: string]: User }
-  ): Promise<void> {
+  async execute(message: Message, users: { [username: string]: User }): Promise<void> {
     const chatId = message.chat.id;
     const prompt = message.text || '';
     if (prompt.startsWith('/')
@@ -41,17 +36,17 @@ export class ConversationCommand extends ParentCommand {
     }
     const prohibited: boolean = await this.isProhibited(prompt);
     if (prohibited) {
-      this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
+      await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
       return;
     }
 
     try {
       const aiMessage = await this.getAiMessage(message, users, prompt);
-      this._bot.sendMessage(chatId, aiMessage);
+      await this._bot.sendMessage(chatId, aiMessage);
     } catch (error: any) {
       logger.error(error);
       if (error?.message.startsWith('Rate limit reached')) {
-        this._bot.sendMessage(chatId, '[You\'re sending too many requests. Please, wait a little bit.]');
+        await this._bot.sendMessage(chatId, '[You\'re sending too many requests. Please, wait a little bit.]');
       }
     }
   }
@@ -81,8 +76,8 @@ export class ConversationCommand extends ParentCommand {
 
   private async askAi(user: User, message: Message) {
     return await this._ai.createCompletion({
-      // model: 'text-davinci-003',
-      model: 'text-curie-001',
+      model: 'text-davinci-003',
+      // model: 'text-curie-001',
       prompt: user.conversation(),
       max_tokens: 256,
       temperature: 1,
@@ -106,7 +101,10 @@ export class ConversationCommand extends ParentCommand {
     });
     const choice = choices[0];
     if (choice.finish_reason !== 'stop') {
-      logger.warn('Failed to fully generate the message', { reason: choice.finish_reason });
+      logger.warn({
+        message: 'Failed to fully generate the message',
+        reason: choice.finish_reason,
+      });
     }
     return choice.text || '';
   }

@@ -1,39 +1,64 @@
-import winston, { format } from 'winston';
-import dotenv from 'dotenv';
 import { property } from './property';
 
-dotenv.config();
-const LOG_LEVEL: string = property('LOG_LEVEL', 'info');
+const SELECTED_LEVEL: string = property('LOG_LEVEL', 'info');
 
-/**
- * Instantiating logging with level selected from the env variables.
- * Log format example:
- * [2023-01-30 02:56:43] [debug]: {
- *   "message": "Enriched text value for an address search.",
- *   "enrichedText": "City name and some address"
- * }
- */
-export const logger = winston.createLogger({
-  level: LOG_LEVEL,
-  format: format.combine(
-    format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss'
-    }),
-    format.printf((info) => `[${info.timestamp}] [${info.level}]: ${getLogMessage(info)}`),
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/all.log' }),
-  ],
-});
+interface Level {
+  position: number;
+  value: string;
+}
 
-const getLogMessage = (info: any): string => {
-  const filteredMessageObject: object = Object.keys(info)
-    .filter((key: string) => (key !== 'timestamp' && key !== 'level'))
-    .reduce((result: any, key: string) => {
-      result[key] = info[key];
-      return result;
-    }, {});
-  return JSON.stringify(filteredMessageObject, null, 2);
+const LOG_LEVELS: any = {
+  debug: {
+    position: 0,
+    value: 'debug',
+  },
+  info: {
+    position: 1,
+    value: 'info',
+  },
+  warn: {
+    position: 2,
+    value: 'warn',
+  },
+  error: {
+    position: 3,
+    value: 'error',
+  },
 };
+
+class Logger {
+  private _level: string
+  constructor(level: string) {
+    this._level = level;
+  }
+
+  private log(level: Level, message: any, error?: any) {
+    if (level.position >= LOG_LEVELS[SELECTED_LEVEL.toLowerCase()].position) {
+      const formattedMessage = typeof message === 'string' ? { message } : message;
+      try {
+        // @ts-ignore
+        console[level.value](JSON.stringify(formattedMessage, null, 2), error);
+      } catch (error) {
+        console.error({ message: 'Failed to write a log.', error });
+      }
+    }
+  }
+
+  public debug(message: any) {
+    this.log(LOG_LEVELS.debug, message);
+  }
+
+  public info(message: any) {
+    this.log(LOG_LEVELS.info, message);
+  }
+
+  public warn(message: any) {
+    this.log(LOG_LEVELS.warn, message);
+  }
+
+  public error(message: any, error?: any) {
+    this.log(LOG_LEVELS.error, message, error);
+  }
+}
+
+export const logger = new Logger(SELECTED_LEVEL);
