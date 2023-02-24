@@ -7,7 +7,6 @@ import { ImagineCommand } from './command/imagine';
 import { ReimagineCommand } from './command/reimagine';
 import { ConversationCommand } from './command/conversation';
 import { TelegramBot } from './utils/bot';
-import { handleExecution } from './utils/handlerWrapper';
 
 /**
  * TODO: add OpenAI config
@@ -36,29 +35,29 @@ const REIMAGINE_PREFIX = '/reimagine ';
 /**
  * Lambda handler to process message to the Telegram Bot.
  */
-export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
-  handleExecution(async () => {
-    const body: any = JSON.parse(event.body || '{}');
-    logger.debug({ body, OPEN_AI_KEY });
+export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const body: any = JSON.parse(event.body || '{}');
+  logger.debug({ body });
 
-    const message: Message = body.message
-    const text: string | undefined = message.text;
-    if (!text) {
-      logger.warn('Invoked with empty text');
-      return;
-    }
+  const message: Message = body.message
+  const text: string | undefined = message.text;
+  if (!text) {
+    logger.warn('Invoked with empty text');
+    return { body: '', statusCode: 200 };
+  }
 
-    if (text.startsWith(IMAGINE_PREFIX)) {
-      message.text = text.replace(IMAGINE_PREFIX, '');
-      logger.debug({ message: 'inside imagine', text: message.text });
-      await imagine.execute(message);
-    } else if (text.startsWith(REIMAGINE_PREFIX)) {
-      message.text = text.replace(REIMAGINE_PREFIX, '');
-      logger.debug({ message: 'inside reimagine', text: message.text });
-      await reimagine.execute(message);
-    } else {
-      logger.debug({ message: 'inside convo', text: message.text });
-      await conversation.execute(message, users);
-    }
-    logger.info('Finished response');
-  });
+  if (text.startsWith(IMAGINE_PREFIX)) {
+    message.text = text.replace(IMAGINE_PREFIX, '');
+    logger.debug({ message: 'inside imagine', text: message.text });
+    await imagine.execute(message);
+  } else if (text.startsWith(REIMAGINE_PREFIX)) {
+    message.text = text.replace(REIMAGINE_PREFIX, '');
+    logger.debug({ message: 'inside reimagine', text: message.text });
+    await reimagine.execute(message);
+  } else {
+    logger.debug({ message: 'inside convo', text: message.text });
+    await conversation.execute(message, users);
+  }
+  logger.info('Finished response');
+  return { body: '', statusCode: 200 };
+};
