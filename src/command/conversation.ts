@@ -33,6 +33,7 @@ export class ConversationCommand extends ParentCommand {
       || message.photo
       || message.reply_to_message
     ) {
+      logger.debug('skipping convo');
       return;
     }
     const prohibited: boolean = await this.isProhibited(prompt);

@@ -37,9 +37,9 @@ const REIMAGINE_PREFIX = '/reimagine ';
  * Lambda handler to process message to the Telegram Bot.
  */
 export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
-  handleExecution(async () =>{
+  handleExecution(async () => {
     const body: any = JSON.parse(event.body || '{}');
-    logger.debug({ body });
+    logger.debug({ body, OPEN_AI_KEY });
 
     const message: Message = body.message
     const text: string | undefined = message.text;
@@ -57,7 +57,7 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
       logger.debug({ message: 'inside reimagine', text: message.text });
       await reimagine.execute(message);
     } else {
-      logger.debug({ message: 'inside reimagine', text: message.text });
+      logger.debug({ message: 'inside convo', text: message.text });
       await conversation.execute(message, users);
     }
     logger.info('Finished response');

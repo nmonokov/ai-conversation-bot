@@ -15,7 +15,7 @@ provider:
 functions:
   botWebhook:
     handler: src/handler.botWebhook
-    memorySize: 512
+    memorySize: 256
     timeout: 60
     events:
       - http:
