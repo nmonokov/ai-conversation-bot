@@ -36,15 +36,15 @@ const REIMAGINE_PREFIX = '/reimagine ';
  * Lambda handler to process message to the Telegram Bot.
  */
 export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
-  handleExecution(async () =>{
+  await handleExecution(async () =>{
     const body: any = JSON.parse(event.body || '{}');
     logger.debug({ body });
 
-    const message: Message = body.message
-    const text: string | undefined = message.text;
+    const message: Message = body?.message
+    const text: string | undefined = message?.text;
     if (!text) {
-      logger.warn('Invoked with empty text');
-      return { body: '', statusCode: 200 };
+      logger.warn('Invoked with empty message or text');
+      return;
     }
 
     if (text.startsWith(IMAGINE_PREFIX)) {
@@ -61,16 +61,15 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
     }
 
     logger.info('Finished response');
-    return { body: '', statusCode: 200 };
   });
 
 /**
  * Wrapper for a Lambda function to prevent constant retries on unhandled errors.
  * @param callback Lambda function
  */
-const handleExecution = (callback: () => void): APIGatewayProxyResult => {
+const handleExecution = async (callback: () => Promise<void>): Promise<APIGatewayProxyResult> => {
   try {
-    callback();
+    await callback();
   } catch (error) {
     logger.error('Lambda execution failed', error);
   }
