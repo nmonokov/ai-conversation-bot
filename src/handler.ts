@@ -7,6 +7,7 @@ import { ImagineCommand } from './command/imagine';
 import { ReimagineCommand } from './command/reimagine';
 import { ConversationCommand } from './command/conversation';
 import { TelegramBot } from './utils/bot';
+import { handleExecution } from './utils/handlerWrapper';
 
 /**
  * TODO: add OpenAI config
@@ -63,15 +64,3 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
     logger.info('Finished response');
   });
 
-/**
- * Wrapper for a Lambda function to prevent constant retries on unhandled errors.
- * @param callback Lambda function
- */
-const handleExecution = async (callback: () => Promise<void>): Promise<APIGatewayProxyResult> => {
-  try {
-    await callback();
-  } catch (error) {
-    logger.error('Lambda execution failed', error);
-  }
-  return { body: '', statusCode: 200 };
-}

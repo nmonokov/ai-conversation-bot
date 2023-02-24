@@ -22,7 +22,7 @@ export class TelegramBot {
   }
 
   async sendPhoto(chatId: number, photoUrl: string): Promise<void> {
-    const url = `${this._url}/sendPhoto?chat_id=${chatId.toString()}&photo=${photoUrl}`;
+    const url = `${this._url}/sendPhoto?chat_id=${chatId.toString()}&photo=${encodeURIComponent(photoUrl)}`;
     logger.debug({ message: 'before request', url });
     const response = await axios.get(url);
     logger.debug({ message: 'after request', status: response.status, data: response.data });
