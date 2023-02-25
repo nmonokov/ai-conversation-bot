@@ -61,7 +61,7 @@ export class UserRegistry {
     await s3.putObject({
       Bucket: this._bucketName,
       Key: `${userContext.username}.json`,
-      Body: userContext,
+      Body: JSON.stringify(userContext),
     }).promise();
   }
 }
