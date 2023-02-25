@@ -53,9 +53,8 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
     });
 
     const message: Message = body?.message || body?.callback_query.message
-    const text: string | undefined = message?.text;
-    const replyMarkup: any = message.reply_markup;
-    if (!text || !replyMarkup) {
+    const text: string | undefined = message?.text || body?.callback_query.data;
+    if (!text) {
       logger.warn('Invoked with empty message or text');
       return;
     }
