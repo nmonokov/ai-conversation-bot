@@ -1,9 +1,5 @@
 export interface Context {
   username: string;
-  conversationContext: ConversationEntry[];
-  tokensThreshold: number;
-  spliceThreshold: number;
-  behaviour: string;
   addUserEntry(prompt: string): void;
   addBotEntry(prompt: string): void;
   conversation(): string;

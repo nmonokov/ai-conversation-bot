@@ -9,17 +9,23 @@ const CHARACTERS_IN_TOKEN: number = 4;
  */
 export class UserContext implements Context {
   readonly username: string;
-  conversationContext: ConversationEntry[];
-  readonly tokensThreshold: number;
-  readonly spliceThreshold: number;
-  behaviour: string;
+  private _conversationContext: ConversationEntry[];
+  private readonly _tokensThreshold: number;
+  private readonly _spliceThreshold: number;
+  private _behaviour: string;
 
-  constructor(username: string, tokensThreshold?: number, spliceThreshold?: number) {
+  constructor(
+    username: string,
+    conversationContext?: ConversationEntry[],
+    tokensThreshold?: number,
+    spliceThreshold?: number,
+    behaviour?: string,
+  ) {
     this.username = username;
-    this.conversationContext = [];
-    this.tokensThreshold = tokensThreshold || 500;
-    this.spliceThreshold = spliceThreshold || 250;
-    this.behaviour = 'AI is a chatbot designed to assist users with their inquiries.' +
+    this._conversationContext = [];
+    this._tokensThreshold = tokensThreshold || 500;
+    this._spliceThreshold = spliceThreshold || 250;
+    this._behaviour = behaviour || 'AI is a chatbot designed to assist users with their inquiries.' +
       ' Its purpose is to help users find the information they need and answer any questions they may have.' +
       ' Users are encouraged to describe their issue or question in as much detail as possible, and the chatbot' +
       ' will do its best to provide a helpful response.';
@@ -43,10 +49,10 @@ export class UserContext implements Context {
    * Returns a string that represents the user's entire conversation history with the chatbot.
    */
   conversation(): string {
-    const convo: string = this.conversationContext
+    const convo: string = this._conversationContext
       .map((entry: ConversationEntry) => entry.value)
       .join('\n');
-    return `${this.behaviour}\n\n${convo}`;
+    return `${this._behaviour}\n\n${convo}`;
   }
 
   /**
@@ -55,8 +61,8 @@ export class UserContext implements Context {
    * @param newBehaviour a new behaviour rule to be applied
    */
   changeBehaviour(newBehaviour: string) {
-    this.conversationContext = [];
-    this.behaviour = newBehaviour;
+    this._conversationContext = [];
+    this._behaviour = newBehaviour;
   }
 
   /**
@@ -68,10 +74,10 @@ export class UserContext implements Context {
     const characters: number = prompt.length;
     const textTokens: number = characters / CHARACTERS_IN_TOKEN;
     const tokens = this._tokens();
-    if ((textTokens + tokens) > this.tokensThreshold) {
+    if ((textTokens + tokens) > this._tokensThreshold) {
       this._trimConversationContext();
     }
-    this.conversationContext.push({
+    this._conversationContext.push({
       tokens: textTokens,
       value: prompt,
     });
@@ -80,19 +86,29 @@ export class UserContext implements Context {
   private _trimConversationContext() {
     let indexForSplice = 0;
     let tokensBeforeThreshold = 0;
-    for (let index = 0; index < this.conversationContext.length; index++) {
-      tokensBeforeThreshold += this.conversationContext[index].tokens;
-      if (tokensBeforeThreshold >= this.spliceThreshold) {
+    for (let index = 0; index < this._conversationContext.length; index++) {
+      tokensBeforeThreshold += this._conversationContext[index].tokens;
+      if (tokensBeforeThreshold >= this._spliceThreshold) {
         indexForSplice = index;
         break;
       }
     }
-    this.conversationContext.splice(0, indexForSplice + 1);
+    this._conversationContext.splice(0, indexForSplice + 1);
   }
 
   private _tokens() {
-    return this.conversationContext
+    return this._conversationContext
       .map((entry: ConversationEntry) => entry.tokens)
       .reduce((accumulator, current) => accumulator + current, 0);
+  }
+
+  static from(persisted: any) {
+    return new UserContext(
+      persisted.username,
+      persisted._conversationContext,
+      persisted._tokensThreshold,
+      persisted._spliceThreshold,
+      persisted._behaviour,
+    );
   }
 }

@@ -37,24 +37,23 @@ export class UserRegistry {
         Bucket: this._bucketName,
         Key: `${username}.json`
       }).promise();
-      logger.debug({ username, userObject });
       const objectBody: string | undefined = userObject.Body?.toString();
       logger.debug({ objectBody });
       if (!objectBody) {
         logger.debug('Empty object body');
         const newContext: any = new UserContext(username);
-        this._cachedContexts[username] = newContext;
-        return newContext;
+        this._cachedContexts[username] = UserContext.from(newContext);
+        return this._cachedContexts[username];
       }
       const userContext: any = JSON.parse(objectBody);
-      this._cachedContexts[username] = userContext;
-      return userContext;
+      this._cachedContexts[username] = UserContext.from(userContext);
+      return this._cachedContexts[username];
     } catch (error: any) {
       if (error.code === 'NoSuchKey') {
         logger.debug('Creating new user context.');
         const newContext: any = new UserContext(username);
-        this._cachedContexts[username] = newContext;
-        return newContext;
+        this._cachedContexts[username] = UserContext.from(newContext);
+        return this._cachedContexts[username];
       }
       logger.error({ message: 'Failed to get user context', error });
       throw Error(error.message);
