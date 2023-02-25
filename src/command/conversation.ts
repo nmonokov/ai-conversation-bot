@@ -62,12 +62,12 @@ export class ConversationCommand extends ParentCommand {
 
   private async askAi(user: User, currentAttempt?: number) {
     let attempt = currentAttempt || 1;
-    logger.debug({
-      attempt,
-      username: user.username,
-    });
     let aiResponse: string = await this._ai.generateAnswer(user.conversation(), user.username);
     if (aiResponse === '' && attempt <= this._maxAttempts) {
+      logger.debug({
+        attempt,
+        username: user.username,
+      });
       attempt++;
       aiResponse = await this.askAi(user, attempt);
     }

@@ -69,8 +69,7 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
     } else if (text.startsWith(BEHAVE_PREFIX)) {
       message.text = text.replace(BEHAVE_PREFIX, '');
       await behave.execute(message, users);
-    }
-    else {
+    } else {
       await conversation.execute(message, users);
     }
 

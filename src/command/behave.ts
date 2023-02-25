@@ -4,7 +4,7 @@ import { logger } from '../utils/logger';
 
 /**
  * /behave command changes the AI behaviour to a selected prompt.
- * The conversation context will be reseted in the result to apply new behaviour.
+ * The conversation context will be reset in the result to apply new behaviour.
  */
 export class BehaviourCommand extends ParentCommand {
 
@@ -13,7 +13,7 @@ export class BehaviourCommand extends ParentCommand {
     const prompt = message.text || '';
     const prohibited: boolean = await this._ai.isProhibited(prompt);
     if (prohibited) {
-      await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
+      await this._bot.sendMessage(chatId, 'Sorry, can\'t use this behavior');
       return;
     }
     const user = this.getUser(message, users);
