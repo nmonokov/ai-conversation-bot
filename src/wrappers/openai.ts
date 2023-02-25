@@ -52,7 +52,7 @@ export class OpenAi {
     logger.debug({
       message: 'Moderation endpoint',
       found,
-      url: moderationResponse.request.url,
+      request: moderationResponse.request,
     });
     return found !== undefined;
   }

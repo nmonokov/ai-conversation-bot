@@ -41,7 +41,7 @@ class Logger {
           messages.push(error);
         }
         // @ts-ignore
-        console[level.value](messages);
+        console[level.value](...messages);
       } catch (error) {
         console.error({ message: 'Failed to write a log.', error });
       }

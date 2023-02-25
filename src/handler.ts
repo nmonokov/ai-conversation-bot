@@ -9,6 +9,7 @@ import { TelegramBot } from './wrappers/bot';
 import { handleExecution } from './wrappers/handlerWrapper';
 import { BehaviourCommand } from './command/behave';
 import { OpenAi } from './wrappers/openai';
+import * as fs from 'fs';
 
 /**
  * TODO: change /reimagine to a button
@@ -42,7 +43,30 @@ const behave: BehaviourCommand = new BehaviourCommand(bot, openai);
 const IMAGINE_PREFIX = '/imagine ';
 const REIMAGINE_PREFIX = '/reimagine';
 const BEHAVE_PREFIX = '/behave';
+
 let count = 0;
+const path = '/tmp/data.txt';
+
+const createFileIfNotExists = (): void => {
+  const exists: boolean = fs.existsSync(path);
+  if (!exists) {
+    fs.writeFileSync(path, '');
+  }
+};
+
+const runTimer = () => {
+  const intervalId = setInterval(() => {
+    fs.appendFileSync(path, `Function running...${count}\n`);
+    count++;
+    if (count >= 10) {
+      clearInterval(intervalId);
+      fs.appendFileSync(path, 'Function stopped after 10 runs.');
+    }
+  }, 30000);
+};
+
+createFileIfNotExists();
+runTimer();
 
 /**
  * Lambda handler to process message to the Telegram Bot.
@@ -50,6 +74,10 @@ let count = 0;
 export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
   await handleExecution(async () => {
     count = 0;
+    fs.appendFileSync(path, 'Resetting count');
+    const file: string = fs.readFileSync(path, 'utf-8');
+    logger.warn({ message: 'Reading File', file });
+
     const body: any = JSON.parse(event.body || '{}');
     logger.debug({
       message: 'Capturing message.',
@@ -76,15 +104,3 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
     }
     logger.debug('Finished response');
   });
-
-const intervalId = setInterval(() => {
-  // Do something here
-  logger.warn(`Function running...${count}`);
-
-  count++;
-
-  if (count >= 10) {
-    clearInterval(intervalId);
-    logger.warn('Function stopped after 10 runs.');
-  }
-}, 30000);
