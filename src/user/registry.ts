@@ -1,6 +1,7 @@
 import { Context } from '../model';
 import { S3 } from 'aws-sdk';
 import { UserContext } from './context';
+import { logger } from '../utils/logger';
 
 const s3 = new S3();
 
@@ -31,19 +32,23 @@ export class UserRegistry {
       return cachedContext;
     }
 
-    const objectBody: string | undefined = (await s3.getObject({
-      Bucket: this._bucketName,
-      Key: `${username}.json`
-    }).promise()).Body?.toString();
-    if (objectBody) {
-      const userContext: Context = JSON.parse(objectBody);
+    try {
+      const objectBody: string | undefined = (await s3.getObject({
+        Bucket: this._bucketName,
+        Key: `${username}.json`
+      }).promise()).Body?.toString();
+      const userContext: Context = JSON.parse(objectBody || '{}');
       this._cachedContexts[username] = userContext;
       return userContext;
+    } catch (error: any) {
+      if (error.code === 'NoSuchKey') {
+        const newContext: Context = new UserContext(username);
+        this._cachedContexts[username] = newContext;
+        return newContext;
+      }
+      logger.error({ message: 'Failed to get user context', error });
+      throw Error(error.message);
     }
-
-    const newContext: Context = new UserContext(username);
-    this._cachedContexts[username] = newContext;
-    return newContext;
   }
 
   /**
