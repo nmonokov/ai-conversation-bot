@@ -14,7 +14,7 @@ export class UserContext implements Context {
   private readonly _spliceThreshold: number;
   private _behaviour: string;
 
-  constructor(
+  private constructor(
     username: string,
     conversationContext?: ConversationEntry[],
     tokensThreshold?: number,
@@ -22,13 +22,37 @@ export class UserContext implements Context {
     behaviour?: string,
   ) {
     this.username = username;
-    this._conversationContext = [];
+    this._conversationContext = conversationContext || [];
     this._tokensThreshold = tokensThreshold || 500;
     this._spliceThreshold = spliceThreshold || 250;
     this._behaviour = behaviour || 'AI is a chatbot designed to assist users with their inquiries.' +
       ' Its purpose is to help users find the information they need and answer any questions they may have.' +
       ' Users are encouraged to describe their issue or question in as much detail as possible, and the chatbot' +
       ' will do its best to provide a helpful response.';
+  }
+
+  /**
+   * Creates user with defaults
+   *
+   * @param username of the telegram user
+   */
+  static new(username: string) {
+    return new UserContext(username);
+  }
+
+  /**
+   * Created full user using all parameters if present.
+   *
+   * @param data with context parameters
+   */
+  static from(data: any) {
+    return new UserContext(
+      data.username,
+      data._conversationContext,
+      data._tokensThreshold,
+      data._spliceThreshold,
+      data._behaviour,
+    );
   }
 
   /**
@@ -100,15 +124,5 @@ export class UserContext implements Context {
     return this._conversationContext
       .map((entry: ConversationEntry) => entry.tokens)
       .reduce((accumulator, current) => accumulator + current, 0);
-  }
-
-  static from(persisted: any) {
-    return new UserContext(
-      persisted.username,
-      persisted._conversationContext,
-      persisted._tokensThreshold,
-      persisted._spliceThreshold,
-      persisted._behaviour,
-    );
   }
 }
