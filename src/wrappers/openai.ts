@@ -49,6 +49,11 @@ export class OpenAi {
     });
     const found: CreateModerationResponseResultsInner | undefined = moderationResponse.data.results
       .find((result: CreateModerationResponseResultsInner) => result.flagged);
+    logger.debug({
+      message: 'Moderation endpoint',
+      found,
+      url: moderationResponse.request.url,
+    });
     return found !== undefined;
   }
 
