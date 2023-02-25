@@ -46,7 +46,7 @@ export class UserRegistry {
         this._cachedContexts[username] = newContext;
         return newContext;
       }
-      const userContext: Context = JSON.parse(objectBody || '{}');
+      const userContext: UserContext = JSON.parse(objectBody);
       this._cachedContexts[username] = userContext;
       return userContext;
     } catch (error: any) {
