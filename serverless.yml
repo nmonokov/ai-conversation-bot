@@ -24,7 +24,6 @@ provider:
         - s3:GetObject
         - s3:PutObject
       Resource:
-        - arn:aws:s3:::${self:custom.names.user-context-bucket}
         - arn:aws:s3:::${self:custom.names.user-context-bucket}/*
 
 custom:
