@@ -9,17 +9,17 @@ const CHARACTERS_IN_TOKEN: number = 4;
  */
 export class UserContext implements Context {
   readonly username: string;
-  private _conversationContext: ConversationEntry[];
-  private readonly _tokensThreshold: number;
-  private readonly _spliceThreshold: number;
-  private _behaviour: string;
+  conversationContext: ConversationEntry[];
+  readonly tokensThreshold: number;
+  readonly spliceThreshold: number;
+  behaviour: string;
 
   constructor(username: string, tokensThreshold?: number, spliceThreshold?: number) {
     this.username = username;
-    this._conversationContext = [];
-    this._tokensThreshold = tokensThreshold || 500;
-    this._spliceThreshold = spliceThreshold || 250;
-    this._behaviour = 'AI is a chatbot designed to assist users with their inquiries.' +
+    this.conversationContext = [];
+    this.tokensThreshold = tokensThreshold || 500;
+    this.spliceThreshold = spliceThreshold || 250;
+    this.behaviour = 'AI is a chatbot designed to assist users with their inquiries.' +
       ' Its purpose is to help users find the information they need and answer any questions they may have.' +
       ' Users are encouraged to describe their issue or question in as much detail as possible, and the chatbot' +
       ' will do its best to provide a helpful response.';
@@ -43,10 +43,10 @@ export class UserContext implements Context {
    * Returns a string that represents the user's entire conversation history with the chatbot.
    */
   conversation(): string {
-    const convo: string = this._conversationContext
+    const convo: string = this.conversationContext
       .map((entry: ConversationEntry) => entry.value)
       .join('\n');
-    return `${this._behaviour}\n\n${convo}`;
+    return `${this.behaviour}\n\n${convo}`;
   }
 
   /**
@@ -55,8 +55,8 @@ export class UserContext implements Context {
    * @param newBehaviour a new behaviour rule to be applied
    */
   changeBehaviour(newBehaviour: string) {
-    this._conversationContext = [];
-    this._behaviour = newBehaviour;
+    this.conversationContext = [];
+    this.behaviour = newBehaviour;
   }
 
   /**
@@ -68,10 +68,10 @@ export class UserContext implements Context {
     const characters: number = prompt.length;
     const textTokens: number = characters / CHARACTERS_IN_TOKEN;
     const tokens = this._tokens();
-    if ((textTokens + tokens) > this._tokensThreshold) {
+    if ((textTokens + tokens) > this.tokensThreshold) {
       this._trimConversationContext();
     }
-    this._conversationContext.push({
+    this.conversationContext.push({
       tokens: textTokens,
       value: prompt,
     });
@@ -80,18 +80,18 @@ export class UserContext implements Context {
   private _trimConversationContext() {
     let indexForSplice = 0;
     let tokensBeforeThreshold = 0;
-    for (let index = 0; index < this._conversationContext.length; index++) {
-      tokensBeforeThreshold += this._conversationContext[index].tokens;
-      if (tokensBeforeThreshold >= this._spliceThreshold) {
+    for (let index = 0; index < this.conversationContext.length; index++) {
+      tokensBeforeThreshold += this.conversationContext[index].tokens;
+      if (tokensBeforeThreshold >= this.spliceThreshold) {
         indexForSplice = index;
         break;
       }
     }
-    this._conversationContext.splice(0, indexForSplice + 1);
+    this.conversationContext.splice(0, indexForSplice + 1);
   }
 
   private _tokens() {
-    return this._conversationContext
+    return this.conversationContext
       .map((entry: ConversationEntry) => entry.tokens)
       .reduce((accumulator, current) => accumulator + current, 0);
   }

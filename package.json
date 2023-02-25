@@ -12,8 +12,8 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.110",
     "@types/node": "^18.11.18",
-    "@types/sharp": "^0.31.1",
     "@types/serverless": "^3.12.11",
+    "@types/sharp": "^0.31.1",
     "serverless": "^3.27.0",
     "serverless-deployment-bucket": "^1.6.0",
     "serverless-plugin-include-dependencies": "^4.1.0",
