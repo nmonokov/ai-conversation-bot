@@ -23,7 +23,7 @@ export class TelegramBot {
     const url = `${this._url}/sendPhoto`;
     const body = {
       chat_id: chatId.toString(),
-      photo: encodeURI(photoUrl),
+      photo: photoUrl,
       reply_markup: [[{
         inline_keyboard: {
           text: 'Reimagine',
