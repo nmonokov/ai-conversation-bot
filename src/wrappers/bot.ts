@@ -22,7 +22,7 @@ export class TelegramBot {
   async sendPhoto(chatId: number, photoUrl: string): Promise<void> {
     const url = `${this._url}/sendPhoto`;
     const body = {
-      chat_id: 193311351,
+      chat_id: chatId,
       photo: photoUrl,
       reply_markup: {
         inline_keyboard: [[{
