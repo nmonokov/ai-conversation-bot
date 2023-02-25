@@ -42,12 +42,14 @@ const behave: BehaviourCommand = new BehaviourCommand(bot, openai);
 const IMAGINE_PREFIX = '/imagine ';
 const REIMAGINE_PREFIX = '/reimagine';
 const BEHAVE_PREFIX = '/behave';
+let count = 0;
 
 /**
  * Lambda handler to process message to the Telegram Bot.
  */
 export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
-  await handleExecution(async () =>{
+  await handleExecution(async () => {
+    count = 0;
     const body: any = JSON.parse(event.body || '{}');
     logger.debug({
       message: 'Capturing message.',
@@ -72,7 +74,17 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
     } else {
       await conversation.execute(message, users);
     }
-
     logger.debug('Finished response');
   });
 
+const intervalId = setInterval(() => {
+  // Do something here
+  logger.warn(`Function running...${count}`);
+
+  count++;
+
+  if (count >= 10) {
+    clearInterval(intervalId);
+    logger.warn('Function stopped after 10 runs.');
+  }
+}, 30000);
