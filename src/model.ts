@@ -1,4 +1,4 @@
-export interface User {
+export interface Context {
   username: string;
   addUserEntry(prompt: string): void;
   addBotEntry(prompt: string): void;
@@ -23,7 +23,7 @@ export interface Chat {
   id: number;
   first_name?: string;
   last_name?: string;
-  username?: string;
+  username: string;
   type?: string;
 }
 

@@ -17,19 +17,31 @@ provider:
     AI_MAX_TOKENS: ${file(config/${self:custom.stage}.json):openai.maxTokens}
     AI_FREQUENCY_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.frequency}
     AI_PRESENCE_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.presence}
+    BUCKET_NAME: ${self:custom.names.user-context-bucket}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: !GetAtt UserContextBucket.Arn
 
 custom:
   stage: ${opt:stage, 'dev'}
+  names:
+    user-context-bucket: user-context-${self:custom.stage}
 
 functions:
   botWebhook:
     handler: src/handler.botWebhook
-    memorySize: 256
-    timeout: 60
+    memorySize: 128
+    timeout: 30
     events:
       - http:
           path: conversation-webhook${self:provider.environment.BOT_TOKEN}
           method: post
+
+resources:
+  - ${file(template.yml)}
 
 plugins:
   - serverless-plugin-typescript

@@ -1,0 +1,5 @@
+Resources:
+  UserContextBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${self:custom.names.user-context-bucket}

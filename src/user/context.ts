@@ -1,4 +1,4 @@
-import { ConversationEntry, User } from '../model';
+import { ConversationEntry, Context } from '../model';
 
 const CHARACTERS_IN_TOKEN: number = 4;
 
@@ -7,7 +7,7 @@ const CHARACTERS_IN_TOKEN: number = 4;
  * Text is represented as 'tokens' which is an OpenAI specific way of measuring data.
  * 1 token approx 4 characters.
  */
-export class UserContext implements User {
+export class UserContext implements Context {
   readonly username: string;
   private _conversationContext: ConversationEntry[];
   private readonly _tokensThreshold: number;
@@ -69,7 +69,7 @@ export class UserContext implements User {
     const textTokens: number = characters / CHARACTERS_IN_TOKEN;
     const tokens = this._tokens();
     if ((textTokens + tokens) > this._tokensThreshold) {
-      this._trimContext();
+      this._trimConversationContext();
     }
     this._conversationContext.push({
       tokens: textTokens,
@@ -77,7 +77,7 @@ export class UserContext implements User {
     });
   }
 
-  private _trimContext() {
+  private _trimConversationContext() {
     let indexForSplice = 0;
     let tokensBeforeThreshold = 0;
     for (let index = 0; index < this._conversationContext.length; index++) {

@@ -1,6 +1,6 @@
 import { ParentCommand } from './parent';
 import { logger } from '../utils/logger';
-import { Message, User } from '../model';
+import { Message, Context } from '../model';
 
 /**
  * Conversation command class and handles the conversational interactions with the user.
@@ -23,7 +23,7 @@ export class ConversationCommand extends ParentCommand {
 
   private readonly _maxAttempts = 3;
 
-  async execute(message: Message, users: { [username: string]: User }): Promise<void> {
+  async execute(message: Message): Promise<void> {
     const chatId = message.chat.id;
     const prompt = message.text || '';
     if (prompt.startsWith('/')
@@ -42,8 +42,10 @@ export class ConversationCommand extends ParentCommand {
     }
 
     try {
-      const aiMessage = await this.getAiMessage(message, users, prompt);
+      const context: Context = await this._registry.getUserContext(message.chat.username);
+      const aiMessage = await this.getAiMessage(context, prompt);
       await this._bot.sendMessage(chatId, aiMessage);
+      await this._registry.storeUserContext(context);
     } catch (error: any) {
       logger.error(error);
       if (error?.message.startsWith('Rate limit reached')) {
@@ -52,15 +54,14 @@ export class ConversationCommand extends ParentCommand {
     }
   }
 
-  private async getAiMessage(message: Message, users: { [username: string]: User }, prompt: string): Promise<string> {
-    const user = this.getUser(message, users);
+  private async getAiMessage(user: Context, prompt: string): Promise<string> {
     user.addUserEntry(prompt);
     const aiResponse = await this.askAi(user);
     user.addBotEntry(aiResponse);
     return aiResponse || '[Failed to generate message. Try once again.]';
   }
 
-  private async askAi(user: User, currentAttempt?: number) {
+  private async askAi(user: Context, currentAttempt?: number) {
     let attempt = currentAttempt || 1;
     let aiResponse: string = await this._ai.generateAnswer(user.conversation(), user.username);
     if (aiResponse === '' && attempt <= this._maxAttempts) {

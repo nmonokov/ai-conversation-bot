@@ -9,7 +9,10 @@ export const handleExecution = async (callback: () => Promise<void>): Promise<AP
   try {
     await callback();
   } catch (error) {
-    logger.error('Lambda execution failed', error);
+    logger.error({
+      message: 'Lambda execution failed',
+      error,
+    });
   }
   return { body: '', statusCode: 200 };
 }
