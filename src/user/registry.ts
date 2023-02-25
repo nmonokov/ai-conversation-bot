@@ -42,16 +42,17 @@ export class UserRegistry {
       logger.debug({ objectBody });
       if (!objectBody) {
         logger.debug('Empty object body');
-        const newContext: Context = new UserContext(username);
+        const newContext: any = new UserContext(username);
         this._cachedContexts[username] = newContext;
         return newContext;
       }
-      const userContext: UserContext = JSON.parse(objectBody);
+      const userContext: any = JSON.parse(objectBody);
       this._cachedContexts[username] = userContext;
       return userContext;
     } catch (error: any) {
       if (error.code === 'NoSuchKey') {
-        const newContext: Context = new UserContext(username);
+        logger.debug('Creating new user context.');
+        const newContext: any = new UserContext(username);
         this._cachedContexts[username] = newContext;
         return newContext;
       }
