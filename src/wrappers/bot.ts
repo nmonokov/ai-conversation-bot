@@ -22,14 +22,14 @@ export class TelegramBot {
   async sendPhoto(chatId: number, photoUrl: string): Promise<void> {
     const url = `${this._url}/sendPhoto`;
     const body = {
-      chat_id: chatId.toString(),
+      chat_id: 193311351,
       photo: photoUrl,
-      reply_markup: [[{
-        inline_keyboard: {
-          text: 'Reimagine',
-          callback_data: "/reimagine"
-        }
-      }]]
+      reply_markup: {
+        inline_keyboard: [[{
+          text: "Reimagine",
+          callback_data: "/reimagine",
+        }]],
+      },
     }
     await axios.post(url, body);
   }
