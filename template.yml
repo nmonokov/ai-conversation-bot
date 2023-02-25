@@ -3,3 +3,8 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: ${self:custom.names.user-context-bucket}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
