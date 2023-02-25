@@ -18,14 +18,18 @@ provider:
     AI_FREQUENCY_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.frequency}
     AI_PRESENCE_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.presence}
     BUCKET_NAME: ${self:custom.names.user-context-bucket}
+
   iamRoleStatements:
     - Effect: Allow
       Action:
         - s3:ListBucket
+      Resource: '*'
+
+    - Effect: Allow
+      Action:
         - s3:GetObject
         - s3:PutObject
-      Resource:
-        - arn:aws:s3:::${self:custom.names.user-context-bucket}/*
+      Resource: arn:aws:s3:::${self:custom.names.user-context-bucket}/*
 
 custom:
   stage: ${opt:stage, 'dev'}
