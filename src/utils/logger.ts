@@ -32,16 +32,12 @@ class Logger {
     this._level = level;
   }
 
-  private log(level: Level, message: any, error?: any) {
+  private log(level: Level, message: any) {
     if (level.position >= LOG_LEVELS[SELECTED_LEVEL.toLowerCase()].position) {
       const formattedMessage = typeof message === 'string' ? { message } : message;
       try {
-        const messages = [JSON.stringify(formattedMessage, null, 2)];
-        if (error) {
-          messages.push(error);
-        }
         // @ts-ignore
-        console[level.value](...messages);
+        console[level.value](JSON.stringify(formattedMessage, null, 2));
       } catch (error) {
         console.error({ message: 'Failed to write a log.', error });
       }
@@ -60,8 +56,8 @@ class Logger {
     this.log(LOG_LEVELS.warn, message);
   }
 
-  public error(message: any, error?: any) {
-    this.log(LOG_LEVELS.error, message, error);
+  public error(message: any) {
+    this.log(LOG_LEVELS.error, message);
   }
 }
 

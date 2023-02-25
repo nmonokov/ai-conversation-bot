@@ -50,19 +50,19 @@ const path = '/tmp/data.txt';
 const createFileIfNotExists = (): void => {
   const exists: boolean = fs.existsSync(path);
   if (!exists) {
-    fs.writeFileSync(path, '');
+    fs.writeFileSync(path, 'New\n ');
   }
 };
 
 const runTimer = () => {
   const intervalId = setInterval(() => {
-    fs.appendFileSync(path, `Function running...${count}\n`);
+    fs.appendFileSync(path, `Function running...${count}\n `);
     count++;
     if (count >= 10) {
       clearInterval(intervalId);
-      fs.appendFileSync(path, 'Function stopped after 10 runs.');
+      fs.appendFileSync(path, 'Function stopped after 10 runs.\n ');
     }
-  }, 30000);
+  }, 5000);
 };
 
 createFileIfNotExists();
@@ -73,8 +73,6 @@ runTimer();
  */
 export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
   await handleExecution(async () => {
-    count = 0;
-    fs.appendFileSync(path, 'Resetting count');
     const file: string = fs.readFileSync(path, 'utf-8');
     logger.warn({ message: 'Reading File', file });
 
