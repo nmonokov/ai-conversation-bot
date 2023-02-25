@@ -33,10 +33,19 @@ export class UserRegistry {
     }
 
     try {
-      const objectBody: string | undefined = (await s3.getObject({
+      const userObject = await s3.getObject({
         Bucket: this._bucketName,
         Key: `${username}.json`
-      }).promise()).Body?.toString();
+      }).promise();
+      logger.debug({ username, userObject });
+      const objectBody: string | undefined = userObject.Body?.toString();
+      logger.debug({ objectBody });
+      if (!objectBody) {
+        logger.debug('Empty object body');
+        const newContext: Context = new UserContext(username);
+        this._cachedContexts[username] = newContext;
+        return newContext;
+      }
       const userContext: Context = JSON.parse(objectBody || '{}');
       this._cachedContexts[username] = userContext;
       return userContext;
