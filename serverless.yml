@@ -23,7 +23,9 @@ provider:
       Action:
         - s3:GetObject
         - s3:PutObject
-      Resource: !GetAtt UserContextBucket.Arn
+      Resource:
+        - arn:aws:s3:::${self:custom.names.user-context-bucket}
+        - arn:aws:s3:::${self:custom.names.user-context-bucket}/*
 
 custom:
   stage: ${opt:stage, 'dev'}
