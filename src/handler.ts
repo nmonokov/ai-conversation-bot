@@ -11,10 +11,6 @@ import { BehaviourCommand } from './command/behave';
 import { OpenAi } from './wrappers/openai';
 import { UserRegistry } from './user/registry';
 
-/**
- * TODO: change /reimagine to a button
- */
-
 const BOT_TOKEN: string = property('BOT_TOKEN');
 const OPEN_AI_KEY: string = property('OPEN_AI_KEY');
 const AI_TEXT_MODEL: string = property('AI_TEXT_MODEL');
@@ -56,9 +52,10 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
       body,
     });
 
-    const message: Message = body?.message
+    const message: Message = body?.message || body?.callback_query.message
     const text: string | undefined = message?.text;
-    if (!text) {
+    const replyMarkup: any = message.reply_markup;
+    if (!text || !replyMarkup) {
       logger.warn('Invoked with empty message or text');
       return;
     }

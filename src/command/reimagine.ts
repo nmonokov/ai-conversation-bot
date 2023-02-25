@@ -13,7 +13,8 @@ export class ReimagineCommand extends ParentCommand {
 
   async execute(message: Message): Promise<void> {
     const chatId = message.chat.id;
-    const photo = message.reply_to_message?.photo;
+    const photo = message.reply_to_message?.photo
+      || (message.reply_markup ? message.photo : undefined);
     if (!photo) {
       await this._bot.sendMessage(chatId, 'Reply to an image to reimagine.');
       return;

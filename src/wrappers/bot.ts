@@ -20,8 +20,18 @@ export class TelegramBot {
   }
 
   async sendPhoto(chatId: number, photoUrl: string): Promise<void> {
-    const url = `${this._url}/sendPhoto?chat_id=${chatId.toString()}&photo=${encodeURIComponent(photoUrl)}`;
-    await axios.get(url);
+    const url = `${this._url}/sendPhoto`;
+    const body = {
+      chat_id: chatId.toString(),
+      photo: encodeURIComponent(photoUrl),
+      reply_markup: [[{
+        inline_keyboard: {
+          text: 'Reimagine',
+          callback_data: "/reimagine"
+        }
+      }]]
+    }
+    await axios.post(url, body);
   }
 
   async getFileLink(fileId: string): Promise<string> {

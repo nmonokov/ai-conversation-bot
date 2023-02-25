@@ -17,6 +17,7 @@ export interface Message {
   text?: string;
   reply_to_message?: ReplyTo;
   photo?: PhotoData[];
+  reply_markup?: any;
 }
 
 export interface Chat {
