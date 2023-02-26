@@ -37,7 +37,7 @@ const reimagine: ReimagineCommand = new ReimagineCommand(bot, openai, registry);
 const conversation: ConversationCommand = new ConversationCommand(bot, openai, registry);
 const behave: BehaviourCommand = new BehaviourCommand(bot, openai, registry);
 
-const IMAGINE_PREFIX = '/imagine ';
+const IMAGINE_PREFIX = '/imagine';
 const REIMAGINE_PREFIX = '/reimagine';
 const BEHAVE_PREFIX = '/behave';
 
@@ -52,22 +52,25 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
       body,
     });
 
-    const message: Message = body?.message || body?.callback_query.message
-    const text: string | undefined = message?.text || body?.callback_query.data;
+    const simpleMessage = body?.message;
+    const buttonMessage = body?.callback_query.message;
+    const buttonCommand = body?.callback_query.data;
+    const message: Message = simpleMessage || buttonMessage
+    const text: string | undefined = message?.text || buttonCommand;
     if (!text) {
       logger.warn('Invoked with empty message or text');
       return;
     }
 
     if (text.startsWith(IMAGINE_PREFIX)) {
-      message.text = text.replace(IMAGINE_PREFIX, '');
+      message.text = text.replace(`${IMAGINE_PREFIX} `, '');
       await imagine.execute(message);
 
     } else if (text.startsWith(REIMAGINE_PREFIX)) {
       await reimagine.execute(message);
 
     } else if (text.startsWith(BEHAVE_PREFIX)) {
-      message.text = text.replace(BEHAVE_PREFIX, '');
+      message.text = text.replace(`${BEHAVE_PREFIX} `, '');
       await behave.execute(message);
 
     } else {

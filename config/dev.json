@@ -1,7 +1,7 @@
 {
   "openai": {
     "textModel": "text-davinci-003",
-    "temperature": 0.6,
+    "temperature": 0.7,
     "maxTokens": 256,
     "penalty": {
       "frequency": 1,
