@@ -52,11 +52,8 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
       body,
     });
 
-    const simpleMessage = body?.message;
-    const buttonMessage = body?.callback_query.message;
-    const buttonCommand = body?.callback_query.data;
-    const message: Message = simpleMessage || buttonMessage
-    const text: string | undefined = message?.text || buttonCommand;
+    const message: Message = body?.message || body?.callback_query.message
+    const text: string | undefined = message?.text || body?.callback_query.data;
     if (!text) {
       logger.warn('Invoked with empty message or text');
       return;
