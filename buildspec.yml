@@ -12,10 +12,11 @@ phases:
   build:
     on-failure: ABORT
     commands:
-      - OUTPUT=$(serverless deploy --stage ${STAGE}
-        --param="bot-token=${BOT_TOKEN}"
-        --param="open-ai-key=${OPEN_AI_KEY}"
-        --param="log-level=${LOG_LEVEL}")
+      - >
+        OUTPUT=$(serverless deploy --stage ${STAGE}
+          --param="bot-token=${BOT_TOKEN}"
+          --param="open-ai-key=${OPEN_AI_KEY}"
+          --param="log-level=${LOG_LEVEL}")
       - WEBHOOK_URL=$(echo "$OUTPUT" | grep "endpoint: POST" | awk '{print $4}')
       - echo "WebHook URL: ${WEBHOOK_URL}"
       - echo $WEBHOOK_URL > endpoint_url.txt
