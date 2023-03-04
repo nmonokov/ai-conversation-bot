@@ -13,20 +13,18 @@ phases:
     on-failure: ABORT
     commands:
       - >
-        OUTPUT=$(serverless deploy --stage ${STAGE}
+        serverless deploy --stage ${STAGE}
           --param="bot-token=${BOT_TOKEN}"
           --param="open-ai-key=${OPEN_AI_KEY}"
-          --param="log-level=${LOG_LEVEL}")
-      - WEBHOOK_URL=$(echo "$OUTPUT" | grep "endpoint: POST" | awk '{print $4}')
-      - echo "WebHook URL: ${WEBHOOK_URL}"
-      - echo $WEBHOOK_URL > endpoint_url.txt
-    finally:
-  post_build:
-    commands:
-      - echo "Before read ${WEBHOOK_URL}"
-      - WEBHOOK_URL=$(cat endpoint_url.txt)
-      - echo "After read ${WEBHOOK_URL}"
-      - curl --request POST --url "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" --data "{\"url\": \"${WEBHOOK_URL}\"}"
+          --param="log-level=${LOG_LEVEL}"
+      - >
+        serverless info --stage ${STAGE}
+          --param="bot-token=${BOT_TOKEN}"
+          --param="open-ai-key=${OPEN_AI_KEY}"
+          --param="log-level=${LOG_LEVEL}"
+        | grep "endpoint: POST"
+        | awk '{print $4}'
+        | xargs -I {} curl --request POST --url "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" --data "{\"url\": \"{}\"}"
       - echo "WebHook linked successfully to the telegram bot"
 
 cache:
