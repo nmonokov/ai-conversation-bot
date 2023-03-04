@@ -25,7 +25,7 @@ phases:
       - echo "Before read ${WEBHOOK_URL}"
       - WEBHOOK_URL=$(cat endpoint_url.txt)
       - echo "After read ${WEBHOOK_URL}"
-      - curl --request POST --url "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" --data '{"url": "'${WEBHOOK_URL}'"}'
+      - curl --request POST --url "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" --data "{\"url\": \"${WEBHOOK_URL}\"}"
       - echo "WebHook linked successfully to the telegram bot"
 
 cache:
