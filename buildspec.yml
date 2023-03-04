@@ -10,11 +10,25 @@ phases:
       - rm -rf node_modules/sharp
       - SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux --libc=glibc sharp
   build:
+    on-failure: ABORT
     commands:
-      - serverless deploy --stage ${STAGE}
+      - OUTPUT=$(serverless deploy --stage ${STAGE}
         --param="bot-token=${BOT_TOKEN}"
         --param="open-ai-key=${OPEN_AI_KEY}"
-        --param="log-level=${LOG_LEVEL}"
+        --param="log-level=${LOG_LEVEL}")
+      - WEBHOOK_URL=$(echo "$OUTPUT" | grep "endpoint: POST" | awk '{print $4}')
+      - echo "WebHook URL: ${WEBHOOK_URL}"
+      - echo $WEBHOOK_URL > endpoint_url.txt
+    finally:
+  post_build:
+    commands:
+      - echo "Before read ${WEBHOOK_URL}"
+      - WEBHOOK_URL=$(cat endpoint_url.txt)
+      - echo "After read ${WEBHOOK_URL}"
+      - curl --request POST --url "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook"
+        --header "content-type: application/json"
+        --data '{"url": "${$WEBHOOK_URL}"}'
+      - echo "WebHook linked successfully to the telegram bot"
 
 cache:
   paths:
