@@ -12,19 +12,14 @@ phases:
   build:
     on-failure: ABORT
     commands:
-      - >
-        serverless deploy --stage ${STAGE}
-          --param="bot-token=${BOT_TOKEN}"
-          --param="open-ai-key=${OPEN_AI_KEY}"
-          --param="log-level=${LOG_LEVEL}"
-      - >
-        serverless info --stage ${STAGE}
-          --param="bot-token=${BOT_TOKEN}"
-          --param="open-ai-key=${OPEN_AI_KEY}"
-          --param="log-level=${LOG_LEVEL}"
-        | grep "endpoint: POST"
-        | awk '{print $4}'
-        | xargs -I {} curl --request POST --url "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" --data "{\"url\": \"{}\"}"
+      - serverless deploy --stage ${STAGE}
+        --param="bot-token=${BOT_TOKEN}"
+        --param="open-ai-key=${OPEN_AI_KEY}"
+        --param="log-level=${LOG_LEVEL}"
+  post_build:
+    commands:
+      - LAMBDA_URL=$(aws lambda get-function --function-name botWebhook --query 'Configuration.ApiEndpoint' --output text)
+      - curl -X POST https://api.telegram.org/bot${BOT_TOKEN}/setWebhook -H "Content-Type: application/json" -d "{\"url\": \"$LAMBDA_URL\"}"
       - echo "WebHook linked successfully to the telegram bot"
 
 cache:
