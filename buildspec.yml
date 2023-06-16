@@ -10,17 +10,11 @@ phases:
       - rm -rf node_modules/sharp
       - SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux --libc=glibc sharp
   build:
-    on-failure: ABORT
     commands:
       - serverless deploy --stage ${STAGE}
         --param="bot-token=${BOT_TOKEN}"
         --param="open-ai-key=${OPEN_AI_KEY}"
         --param="log-level=${LOG_LEVEL}"
-  post_build:
-    commands:
-      - "LAMBDA_URL=$(aws lambda get-function --function-name botWebhook --query 'Configuration.ApiEndpoint' --output text)"
-      - "curl -X POST https://api.telegram.org/bot${BOT_TOKEN}/setWebhook -H \"Content-Type: application/json\" -d \"{\\\"url\\\": \\\"${LAMBDA_URL}\\\"}\""
-      - echo "WebHook linked successfully to the telegram bot"
 
 cache:
   paths:
