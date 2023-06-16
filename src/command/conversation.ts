@@ -35,10 +35,19 @@ export class ConversationCommand extends ParentCommand {
       return;
     }
 
-    const prohibited: boolean = await this._ai.isProhibited(prompt);
-    if (prohibited) {
-      await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
-      return;
+    try {
+      const prohibited: boolean = await this._ai.isProhibited(prompt);
+      if (prohibited) {
+        await this._bot.sendMessage(chatId, 'Sorry, can\'t generate this');
+        return;
+      }
+    } catch (error: any) {
+      const { message: errorMessage }: { message: string} = error;
+      logger.error(errorMessage);
+      if (errorMessage === 'Request failed with status code 429') {
+        await this._bot.sendMessage(chatId,
+          '[Either rate limit has been reached or your openai token has expired]');
+      }
     }
 
     try {
