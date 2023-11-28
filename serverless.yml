@@ -9,17 +9,9 @@ provider:
     name: sls-deploy-${opt:account, 'serverless'}-${self:provider.region}
     serverSideEncryption: AES256
   environment:
+    LOG_LEVEL: ${param:log-level}
     BOT_TOKEN: ${param:bot-token}
     OPEN_AI_KEY: ${param:open-ai-key}
-    LOG_LEVEL: ${param:log-level}
-    AI_TEXT_MODEL: ${file(config/${self:custom.stage}.json):openai.textModel}
-    AI_TEMPERATURE: ${file(config/${self:custom.stage}.json):openai.temperature}
-    AI_MAX_TOKENS: ${file(config/${self:custom.stage}.json):openai.maxTokens}
-    AI_FREQUENCY_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.frequency}
-    AI_PRESENCE_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.presence}
-    CONTEXT_TOKENS_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.tokens}
-    CONTEXT_SPLICE_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.splice}
-    BUCKET_NAME: ${self:custom.names.user-context-bucket}
 
   iamRoleStatements:
     - Effect: Allow
@@ -33,20 +25,51 @@ provider:
         - s3:PutObject
       Resource: arn:aws:s3:::${self:custom.names.user-context-bucket}/*
 
+    - Effect: Allow
+      Action:
+        - apigateway:GET
+      Resource: arn:aws:apigateway:${aws:region}::/restapis
+
 custom:
   stage: ${opt:stage, 'dev'}
   names:
     user-context-bucket: user-context-${self:custom.stage}
+  scripts:
+    hooks:
+      'after:deploy:finalize': serverless invoke -f schedule --stage ${self:custom.stage}
+        --param="log-level=${self:provider.environment.LOG_LEVEL}"
+        --param="bot-token=${self:provider.environment.BOT_TOKEN}"
+        --param="open-ai-key=${self:provider.environment.OPEN_AI_KEY}"
 
 functions:
   botWebhook:
     handler: src/handler.botWebhook
     memorySize: 128
     timeout: 30
+    environment:
+      AI_TEXT_MODEL: ${file(config/${self:custom.stage}.json):openai.textModel}
+      AI_TEMPERATURE: ${file(config/${self:custom.stage}.json):openai.temperature}
+      AI_MAX_TOKENS: ${file(config/${self:custom.stage}.json):openai.maxTokens}
+      AI_FREQUENCY_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.frequency}
+      AI_PRESENCE_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.presence}
+      CONTEXT_TOKENS_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.tokens}
+      CONTEXT_SPLICE_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.splice}
+      BUCKET_NAME: ${self:custom.names.user-context-bucket}
     events:
       - http:
           path: conversation-webhook${self:provider.environment.BOT_TOKEN}
           method: post
+
+  schedule:
+    handler: src/schedule.resetWebhook
+    memorySize: 128
+    timeout: 30
+    environment:
+      FULL_SERVICE_NAME: ${self:custom.stage}-${self:service}
+      REGION: ${aws:region}
+      STAGE: ${self:custom.stage}
+    events:
+      - schedule: rate(24 hours)
 
 resources:
   - ${file(template.yml)}
@@ -55,3 +78,4 @@ plugins:
   - serverless-plugin-typescript
   - serverless-deployment-bucket
   - serverless-plugin-include-dependencies
+  - serverless-plugin-scripts
