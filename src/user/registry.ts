@@ -1,21 +1,22 @@
-import { Context } from '../model';
 import { S3 } from 'aws-sdk';
-import { UserContext } from './context';
-import { logger } from '../utils/logger';
-
-const s3 = new S3();
+import { Context } from './context';
+import { ContextConfiguration } from '../model';
 
 /**
  * Class to persist user context in the S3 bucket, so we are not relying on lambda
  * uptime and can carry user-bot session from lambda instance to lambda instance.
  */
-export class UserRegistry {
-  private readonly _cachedContexts: { [username: string]: Context };
-  private readonly _bucketName: string;
+export abstract class UserRegistry {
+  protected readonly _cachedContexts: { [username: string]: Context };
+  protected readonly _bucketName: string;
+  protected _config: ContextConfiguration;
+  protected _s3: S3;
 
-  constructor(bucketName: string) {
+  constructor(bucketName: string, config: ContextConfiguration) {
     this._cachedContexts = {};
     this._bucketName = bucketName;
+    this._config = config;
+    this._s3 = new S3();
   }
 
   /**
@@ -27,28 +28,40 @@ export class UserRegistry {
    * @param username telegram user's name
    */
   async getUserContext(username: string): Promise<Context> {
-    const cachedContext: Context = this._cachedContexts[username];
+    let cachedContext: Context | undefined = this.readFromMemory(username);
     if (cachedContext) {
       return cachedContext;
     }
 
-    try {
-      const userObject = await s3.getObject({
-        Bucket: this._bucketName,
-        Key: `${username}.json`
-      }).promise();
-      const objectBody: string = userObject.Body?.toString() || `{ username: ${username} }`;
-      const parsedContext: any = JSON.parse(objectBody);
-      this._cachedContexts[username] = UserContext.from(parsedContext);
-      return this._cachedContexts[username];
-    } catch (error) {
-      logger.error({ message: 'Failed to get user context', error });
+    cachedContext = await this.readFromBucket(username);
+    if (cachedContext) {
+      return cachedContext;
     }
 
-    logger.debug('Creating new user context.');
-    this._cachedContexts[username] = UserContext.new(username);
-    return this._cachedContexts[username]
+    return this.createNewContext(username);
   }
+
+  protected readFromMemory(username: string): Context | undefined {
+    return this._cachedContexts[username];
+  }
+
+  /**
+   * Read user context from the file store in the S3 bucket.
+   * @param username as a file name and a key in a cache map.
+   */
+  abstract readFromBucket(username: string): Promise<Context | undefined>;
+
+  /**
+   * Create new user context and store it into the memory cache.
+   * @param username as a key in the cache map.
+   */
+  abstract createNewContext(username: string): Context;
+
+  /**
+   * File path on the S3 bucket.
+   * @param username will be the file name of the user context.
+   */
+  abstract getFilePath(username: string): string;
 
   /**
    * Saves user context to a file. Overrides it if new changes occurs.
@@ -57,9 +70,9 @@ export class UserRegistry {
    * @param userContext user's context with conversation and bot behaviour.
    */
   async storeUserContext(userContext: Context): Promise<void> {
-    await s3.putObject({
+    await this._s3.putObject({
       Bucket: this._bucketName,
-      Key: `${userContext.username}.json`,
+      Key: this.getFilePath(userContext.username),
       Body: JSON.stringify(userContext),
     }).promise();
   }

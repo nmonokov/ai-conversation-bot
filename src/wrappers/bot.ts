@@ -15,7 +15,7 @@ export class TelegramBot {
   }
 
   async sendMessage(chatId: number, message: string): Promise<void> {
-    const url = `${this._url}/sendMessage?chat_id=${chatId.toString()}&text=${message}`;
+    const url = `${this._url}/sendMessage?chat_id=${chatId.toString()}&text=${encodeURI(message)}`;
     await axios.get(url);
   }
 

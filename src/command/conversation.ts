@@ -1,10 +1,11 @@
 import { ParentCommand } from './parent';
 import { logger } from '../utils/logger';
-import { Message, Context } from '../model';
+import { Message } from '../model';
+import { Context } from '../user/context';
 
 /**
  * Conversation command class and handles the conversational interactions with the user.
- * The execute method first checks
+ * The execute method first checks:
  *  - if the incoming message is a command
  *  - if it was received from a group chat
  *  - if the message is prohibited
@@ -63,23 +64,23 @@ export class ConversationCommand extends ParentCommand {
     }
   }
 
-  private async getAiMessage(user: Context, prompt: string): Promise<string> {
-    user.addUserEntry(prompt);
-    const aiResponse = await this.askAi(user);
-    user.addBotEntry(aiResponse);
+  private async getAiMessage(context: Context, prompt: string): Promise<string> {
+    context.addUserEntry(prompt);
+    const aiResponse = await this.askAi(context);
+    context.addBotEntry(aiResponse);
     return aiResponse || '[Failed to generate message. Try once again.]';
   }
 
-  private async askAi(user: Context, currentAttempt?: number) {
+  private async askAi(context: Context, currentAttempt?: number) {
     let attempt = currentAttempt || 1;
-    let aiResponse: string = await this._ai.generateAnswer(user.conversation(), user.username);
+    let aiResponse: string = await this._ai.generateAnswer(context.conversation(), context.username);
     if (aiResponse === '' && attempt <= this._maxAttempts) {
       logger.debug({
         attempt,
-        username: user.username,
+        username: context.username,
       });
       attempt++;
-      aiResponse = await this.askAi(user, attempt);
+      aiResponse = await this.askAi(context, attempt);
     }
     return aiResponse;
   }

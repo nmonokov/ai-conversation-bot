@@ -1,4 +1,4 @@
-import { ConversationEntry, Context } from '../model';
+import { ConversationEntry } from '../model';
 
 const CHARACTERS_IN_TOKEN: number = 4;
 
@@ -7,14 +7,14 @@ const CHARACTERS_IN_TOKEN: number = 4;
  * Text is represented as 'tokens' which is an OpenAI specific way of measuring data.
  * 1 token approx 4 characters.
  */
-export class UserContext implements Context {
+export abstract class Context {
   readonly username: string;
-  private _conversationContext: ConversationEntry[];
-  private readonly _tokensThreshold: number;
-  private readonly _spliceThreshold: number;
-  private _behaviour: string;
+  protected _conversationContext: ConversationEntry[];
+  protected readonly _tokensThreshold: number;
+  protected readonly _spliceThreshold: number;
+  protected _behaviour: any;
 
-  private constructor(
+  constructor(
     username: string,
     conversationContext?: ConversationEntry[],
     tokensThreshold?: number,
@@ -32,70 +32,43 @@ export class UserContext implements Context {
   }
 
   /**
-   * Creates user with defaults
-   *
-   * @param username of the telegram user
-   */
-  static new(username: string) {
-    return new UserContext(username);
-  }
-
-  /**
-   * Created full user using all parameters if present.
-   *
-   * @param data with context parameters
-   */
-  static from(data: any) {
-    return new UserContext(
-      data.username,
-      data._conversationContext,
-      data._tokensThreshold,
-      data._spliceThreshold,
-      data._behaviour,
-    );
-  }
-
-  /**
    * Saves user entry. Append with 'You' and 'AI' for better text generation.
    */
-  addUserEntry(prompt: string) {
-    this._addEntry(`You: ${prompt}\nAI: `);
-  }
+  abstract addUserEntry(prompt: string): void;
 
   /**
    * Saves bot response. Cleans empty lines.
    */
-  addBotEntry(prompt: string) {
-    this._addEntry(prompt.replace(/\n+/, ''));
-  }
+  abstract addBotEntry(prompt: string): void;
 
   /**
    * Returns a string that represents the user's entire conversation history with the chatbot.
    */
-  conversation(): string {
-    const convo: string = this._conversationContext
-      .map((entry: ConversationEntry) => entry.value)
-      .join('\n');
-    return `${this._behaviour}\n\n${convo}`;
-  }
+  abstract conversation(): any;
 
   /**
    * Set new behaviour for the chatbot and resets the conversation context
    * so new behaviour applied.
    * @param newBehaviour a new behaviour rule to be applied
    */
-  changeBehaviour(newBehaviour: string) {
+  changeBehaviour(newBehaviour: string): void {
     this._conversationContext = [];
     this._behaviour = newBehaviour;
   }
+
+  /**
+   * Calculating prompt length based on the model version.
+   * @param prompt could be as a string or as a map.
+   */
+  abstract getPromptLength(prompt: any): number;
 
   /**
    * Adds an entry to the _conversationContext array
    * and trims it if the total number of tokens exceeds the _tokensThreshold
    * @param prompt to save
    */
-  private _addEntry(prompt: string): void {
-    const characters: number = prompt.length;
+  protected _addEntry(prompt: any): void {
+    const characters: number = this.getPromptLength(prompt);
     const textTokens: number = characters / CHARACTERS_IN_TOKEN;
     const tokens = this._tokens();
     if ((textTokens + tokens) > this._tokensThreshold) {

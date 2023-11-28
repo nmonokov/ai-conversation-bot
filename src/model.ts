@@ -1,11 +1,3 @@
-export interface Context {
-  username: string;
-  addUserEntry(prompt: string): void;
-  addBotEntry(prompt: string): void;
-  conversation(): string;
-  changeBehaviour(newBehaviour: string): void;
-}
-
 export interface ConversationEntry {
   tokens: number;
   value: string;
@@ -40,4 +32,14 @@ export interface PhotoData {
   width?: number;
   height?: number;
   file_path?: string;
+}
+
+export interface ContextConfiguration {
+  tokensThreshold?: number;
+  spliceThreshold?: number;
+}
+
+export enum TextModel {
+  TURBO_3_5 = 'gpt-3.5-turbo',
+  DAVINCI = 'text-davinci-003',
 }

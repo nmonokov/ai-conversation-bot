@@ -1,6 +1,7 @@
 import { ParentCommand } from './parent';
-import { Message, Context } from '../model';
+import { Message } from '../model';
 import { logger } from '../utils/logger';
+import { Context } from '../user/context';
 
 /**
  * /behave command changes the AI behaviour to a selected prompt.

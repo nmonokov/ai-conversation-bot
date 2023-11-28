@@ -1,6 +1,6 @@
 import { Message } from '../model';
 import { TelegramBot } from '../wrappers/bot';
-import { OpenAi } from '../wrappers/openai';
+import { OpenAi } from '../wrappers/ai/openai';
 import { UserRegistry } from '../user/registry';
 
 export abstract class ParentCommand {

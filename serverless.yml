@@ -17,6 +17,8 @@ provider:
     AI_MAX_TOKENS: ${file(config/${self:custom.stage}.json):openai.maxTokens}
     AI_FREQUENCY_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.frequency}
     AI_PRESENCE_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.presence}
+    CONTEXT_TOKENS_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.tokens}
+    CONTEXT_SPLICE_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.splice}
     BUCKET_NAME: ${self:custom.names.user-context-bucket}
 
   iamRoleStatements:

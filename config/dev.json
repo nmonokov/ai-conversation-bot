@@ -2,10 +2,16 @@
   "openai": {
     "textModel": "text-davinci-003",
     "temperature": 0.7,
-    "maxTokens": 256,
+    "maxTokens": 500,
     "penalty": {
       "frequency": 1,
       "presence": 0
+    }
+  },
+  "context": {
+    "threshold": {
+      "tokens": 400,
+      "splice": 200
     }
   }
 }
