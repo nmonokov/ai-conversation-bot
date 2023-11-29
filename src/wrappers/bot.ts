@@ -24,12 +24,6 @@ export class TelegramBot {
     const body = {
       chat_id: chatId,
       photo: photoUrl,
-      reply_markup: {
-        inline_keyboard: [[{
-          text: "Reimagine",
-          callback_data: "/reimagine",
-        }]],
-      },
     }
     await axios.post(url, body);
   }

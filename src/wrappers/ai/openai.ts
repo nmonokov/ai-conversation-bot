@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
-import sharp from 'sharp';
 import { logger } from '../../utils/logger';
 import Moderation = OpenAI.Moderation;
+import { ChatCompletion } from 'openai/resources';
 
 /**
  * Wrapper class for OpenAI API. Contains all configurations that are set up by a builder inner class.
@@ -78,31 +78,30 @@ export abstract class OpenAi {
     return imageCreateResponse.data[0].url || 'Not generated';
   }
 
-  /**
-   * Generates an image based on another image.
-   *
-   * @param imageData buffer of the source image.
-   */
-  async generateVariation(imageData: any): Promise<string> {
-    const buffer: any = await this._convertToPng(imageData);
-    buffer.name = 'image.png';
-    const imageVariationResponse = await this._api.images.createVariation({
-      image: buffer,
-      n: 1,
-      response_format: 'url',
-      size: '512x512',
+  async analyseImage(imageUrl: string, caption: string): Promise<string> {
+    const completionResponse: ChatCompletion = await this._api.chat.completions.create({
+      model: 'gpt-4-vision-preview',
+      max_tokens: this._maxTokens,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: caption,
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: imageUrl,
+            },
+          },
+        ],
+      }],
     });
-    return imageVariationResponse.data[0].url || '';
+    const answer = completionResponse.choices.find((choice: any) => choice.finish_details?.type === 'stop');
+    return answer?.message?.content || '';
   }
 
-  private async _convertToPng(data: Buffer): Promise<any> {
-    const buffer: any = await sharp(data)
-      .resize(1024, 1024)
-      .png()
-      .toBuffer();
-    buffer.name = 'image.png';
-    return buffer;
-  }
 }
 
 

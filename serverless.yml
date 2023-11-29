@@ -77,5 +77,6 @@ resources:
 plugins:
   - serverless-plugin-typescript
   - serverless-deployment-bucket
+  - serverless-plugin-common-excludes
   - serverless-plugin-include-dependencies
   - serverless-plugin-scripts

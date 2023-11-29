@@ -53,22 +53,17 @@ export class ConversationCommand extends ParentCommand {
 
     try {
       const context: Context = await this._registry.getUserContext(message.chat.username);
-      const aiMessage = await this.getAiMessage(context, prompt);
-      await this._bot.sendMessage(chatId, aiMessage);
-      await this._registry.storeUserContext(context);
+      const response = await this.askAi(context);
+      await Promise.all([
+        this._bot.sendMessage(chatId, response),
+        this.captureConversation(message, prompt, response),
+      ]);
     } catch (error: any) {
       logger.error(error);
       if (error?.message.startsWith('Rate limit reached')) {
         await this._bot.sendMessage(chatId, '[You\'re sending too many requests. Please, wait a little bit.]');
       }
     }
-  }
-
-  private async getAiMessage(context: Context, prompt: string): Promise<string> {
-    context.addUserEntry(prompt);
-    const aiResponse = await this.askAi(context);
-    context.addBotEntry(aiResponse);
-    return aiResponse || '[Failed to generate message. Try once again.]';
   }
 
   private async askAi(context: Context, currentAttempt?: number) {
@@ -82,6 +77,6 @@ export class ConversationCommand extends ParentCommand {
       attempt++;
       aiResponse = await this.askAi(context, attempt);
     }
-    return aiResponse;
+    return aiResponse || '[Failed to generate message. Try once again.]';
   }
 }

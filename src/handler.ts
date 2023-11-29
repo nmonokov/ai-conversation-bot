@@ -1,9 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { property } from './utils/property';
 import { logger } from './utils/logger';
-import { ContextConfiguration, Message, TextModel } from './model';
+import { ContextConfiguration, Message, PhotoData, TextModel } from './model';
 import { ImagineCommand } from './command/imagine';
-import { ReimagineCommand } from './command/reimagine';
 import { ConversationCommand } from './command/conversation';
 import { TelegramBot } from './wrappers/bot';
 import { handleExecution } from './wrappers/handlerWrapper';
@@ -14,6 +13,7 @@ import { TurboRegistry } from './user/turbo/turboRegistry';
 import { DavinciRegistry } from './user/davinci/davinciRegistry';
 import { TurboOpenAi } from './wrappers/ai/turbo/turboOpenAi';
 import { DavinciOpenAi } from './wrappers/ai/davinci/davinciOpenAi';
+import { AnalyseCommand } from './command/analyse';
 
 /** Fetching env variables */
 const BOT_TOKEN: string = property('BOT_TOKEN');
@@ -61,12 +61,11 @@ if (AI_TEXT_MODEL === TextModel.TURBO_3_5) {
 
 /** Handling bot commands */
 const imagine: ImagineCommand = new ImagineCommand(bot, openai, registry);
-const reimagine: ReimagineCommand = new ReimagineCommand(bot, openai, registry);
+const analyse: AnalyseCommand = new AnalyseCommand(bot, openai, registry);
 const conversation: ConversationCommand = new ConversationCommand(bot, openai, registry);
 const behave: BehaviourCommand = new BehaviourCommand(bot, openai, registry);
 
 const IMAGINE_PREFIX = '/imagine';
-const REIMAGINE_PREFIX = '/reimagine';
 const BEHAVE_PREFIX = '/behave';
 
 /**
@@ -80,23 +79,25 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
       body,
     });
 
-    const message: Message = body?.message || body?.callback_query.message
-    const text: string | undefined = message?.text || body?.callback_query.data;
-    if (!text) {
+    const message: Message = body?.message || body?.callback_query?.message
+    const text: string | undefined = message?.text || body?.callback_query?.data;
+    const photo: PhotoData[] | undefined = message.photo;
+    if (!text && !(photo && photo.length > 0)) {
       logger.warn('Invoked with empty message or text');
       return;
     }
+    logger.debug({ message: 'After text validation', text, photo});
 
-    if (text.startsWith(IMAGINE_PREFIX)) {
+    if (text?.startsWith(IMAGINE_PREFIX)) {
       message.text = text.replace(`${IMAGINE_PREFIX} `, '');
       await imagine.execute(message);
 
-    } else if (text.startsWith(REIMAGINE_PREFIX)) {
-      await reimagine.execute(message);
-
-    } else if (text.startsWith(BEHAVE_PREFIX)) {
-      message.text = text.replace(`${BEHAVE_PREFIX} `, '');
+    } else if (text?.startsWith(BEHAVE_PREFIX)) {
+      message.text = text?.replace(`${BEHAVE_PREFIX} `, '');
       await behave.execute(message);
+
+    } else if (message.photo && message.photo.length > 0) {
+      await analyse.execute(message);
 
     } else {
       await conversation.execute(message);

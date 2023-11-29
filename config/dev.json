@@ -1,8 +1,8 @@
 {
   "openai": {
-    "textModel": "text-davinci-003",
+    "textModel": "gpt-3.5-turbo",
     "temperature": 0.7,
-    "maxTokens": 500,
+    "maxTokens": 1000,
     "penalty": {
       "frequency": 1,
       "presence": 0
@@ -10,8 +10,8 @@
   },
   "context": {
     "threshold": {
-      "tokens": 400,
-      "splice": 200
+      "tokens": 800,
+      "splice": 600
     }
   }
 }

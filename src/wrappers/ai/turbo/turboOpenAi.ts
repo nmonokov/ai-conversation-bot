@@ -45,7 +45,6 @@ export class TurboOpenAi extends OpenAi {
     return choice?.message?.content || '';
   }
 
-
   static Builder = class {
     private static _apiKey: string;
     private static _textModel: string;

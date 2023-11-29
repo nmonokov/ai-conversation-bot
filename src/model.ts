@@ -10,6 +10,7 @@ export interface Message {
   reply_to_message?: ReplyTo;
   photo?: PhotoData[];
   reply_markup?: any;
+  caption?: string;
 }
 
 export interface Chat {
