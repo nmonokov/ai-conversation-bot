@@ -1,8 +1,7 @@
 import { OpenAi } from '../openai';
-import { AxiosResponse } from 'axios';
-import { CreateChatCompletionResponse } from 'openai/api';
 import { logger } from '../../../utils/logger';
-import { CreateChatCompletionResponseChoicesInner } from 'openai';
+import { ChatCompletion } from 'openai/src/resources/chat/completions';
+import Choice = ChatCompletion.Choice;
 
 /**
  * This is an instance of a new open ai version of a text model which can cater for gpt-3.5-turbo and gpt-4.
@@ -11,7 +10,7 @@ import { CreateChatCompletionResponseChoicesInner } from 'openai';
 export class TurboOpenAi extends OpenAi {
 
   async generateAnswer(prompt: any, username: string): Promise<string> {
-    const completionResponse: AxiosResponse<CreateChatCompletionResponse> = await this._api.createChatCompletion({
+    const completionResponse: ChatCompletion = await this._api.chat.completions.create({
       model: this._textModel,
       messages: prompt,
       temperature: this._temperature,
@@ -20,14 +19,14 @@ export class TurboOpenAi extends OpenAi {
       frequency_penalty: this._frequencyPenalty,
       presence_penalty: this._presencePenalty,
     });
-    logger.debug({ response: completionResponse.data })
-    return  this._pickChoice(completionResponse.data.choices);
+    logger.debug({ response: completionResponse })
+    return  this._pickChoice(completionResponse.choices);
   }
 
-  private _pickChoice(choices: CreateChatCompletionResponseChoicesInner[]): string {
+  private _pickChoice(choices: Choice[]): string {
     choices.sort((
-      firstChoice: CreateChatCompletionResponseChoicesInner,
-      secondChoice: CreateChatCompletionResponseChoicesInner
+      firstChoice: Choice,
+      secondChoice: Choice
     ) => {
       if (firstChoice.finish_reason === 'stop') {
         return -1;

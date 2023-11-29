@@ -1,10 +1,6 @@
-import { AxiosResponse } from 'axios';
-import {
-  CreateCompletionResponse,
-  CreateCompletionResponseChoicesInner
-} from 'openai/api';
 import { logger } from '../../../utils/logger';
 import { OpenAi } from '../openai';
+import { Completion, CompletionChoice } from 'openai/src/resources/completions';
 
 /**
  * Legacy text model system. Better use turbo instead.
@@ -12,7 +8,7 @@ import { OpenAi } from '../openai';
 export class DavinciOpenAi extends OpenAi {
 
   async generateAnswer(prompt: any, username: string): Promise<string> {
-    const completionResponse: AxiosResponse<CreateCompletionResponse> = await this._api.createCompletion({
+    const completionResponse: Completion = await this._api.completions.create({
       model: this._textModel,
       prompt,
       max_tokens: this._maxTokens,
@@ -21,14 +17,14 @@ export class DavinciOpenAi extends OpenAi {
       frequency_penalty: this._frequencyPenalty,
       presence_penalty: this._presencePenalty,
     });
-    logger.debug({ response: completionResponse.data })
-    return this._pickChoice(completionResponse.data.choices);
+    logger.debug({ response: completionResponse })
+    return this._pickChoice(completionResponse.choices);
   }
 
-  private _pickChoice(choices: CreateCompletionResponseChoicesInner[]): string {
+  private _pickChoice(choices: CompletionChoice[]): string {
     choices.sort((
-      firstChoice: CreateCompletionResponseChoicesInner,
-      secondChoice: CreateCompletionResponseChoicesInner
+      firstChoice: CompletionChoice,
+      secondChoice: CompletionChoice
     ) => {
       if (firstChoice.finish_reason === 'stop') {
         return -1;

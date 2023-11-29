@@ -1,14 +1,14 @@
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import sharp from 'sharp';
-import { CreateModerationResponseResultsInner } from 'openai/api';
 import { logger } from '../../utils/logger';
+import Moderation = OpenAI.Moderation;
 
 /**
  * Wrapper class for OpenAI API. Contains all configurations that are set up by a builder inner class.
  * Wraps methods used in this bot and uses the stored configurations.
  */
 export abstract class OpenAi {
-  protected readonly _api: OpenAIApi;
+  protected readonly _api: OpenAI;
   protected readonly _textModel: string;
   protected readonly _temperature: number;
   protected readonly _maxTokens: number;
@@ -23,7 +23,7 @@ export abstract class OpenAi {
     frequencyPenalty: number,
     presencePenalty: number,
   ) {
-    this._api = new OpenAIApi(new Configuration({ apiKey }));
+    this._api = new OpenAI({ apiKey });
     this._textModel = textModel;
     this._temperature = temperature;
     this._maxTokens = maxTokens;
@@ -38,12 +38,12 @@ export abstract class OpenAi {
    * @param prompt to check.
    */
   async isProhibited(prompt: string): Promise<boolean> {
-    const moderationResponse = await this._api.createModeration({
+    const moderationResponse = await this._api.moderations.create({
       model: 'text-moderation-latest',
       input: prompt,
     });
-    const found: CreateModerationResponseResultsInner | undefined = moderationResponse.data.results
-      .find((response: CreateModerationResponseResultsInner) => response.flagged);
+    const found: Moderation | undefined = moderationResponse.results
+      .find((response: Moderation) => response.flagged);
     const result = found !== undefined;
     if (result) {
       logger.debug({
@@ -69,8 +69,13 @@ export abstract class OpenAi {
    * @param prompt with image description.
    */
   async generateImage(prompt: string): Promise<string> {
-    const imageCreateResponse = await this._api.createImage({ prompt, n: 1, size: '1024x1024' });
-    return imageCreateResponse.data.data[0].url || 'Not generated';
+    const imageCreateResponse = await this._api.images.generate({
+      prompt,
+      n: 1,
+      model: 'dall-e-3',
+      size: '1024x1024',
+    });
+    return imageCreateResponse.data[0].url || 'Not generated';
   }
 
   /**
@@ -80,8 +85,14 @@ export abstract class OpenAi {
    */
   async generateVariation(imageData: any): Promise<string> {
     const buffer: any = await this._convertToPng(imageData);
-    const imageVariationResponse = await this._api.createImageVariation(buffer, 1, '1024x1024');
-    return imageVariationResponse.data.data[0].url || '';
+    buffer.name = 'image.png';
+    const imageVariationResponse = await this._api.images.createVariation({
+      image: buffer,
+      n: 1,
+      response_format: 'url',
+      size: '512x512',
+    });
+    return imageVariationResponse.data[0].url || '';
   }
 
   private async _convertToPng(data: Buffer): Promise<any> {
