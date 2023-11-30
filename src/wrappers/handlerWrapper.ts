@@ -8,10 +8,11 @@ import { APIGatewayProxyResult } from 'aws-lambda';
 export const handleExecution = async (callback: () => Promise<void>): Promise<APIGatewayProxyResult> => {
   try {
     await callback();
-  } catch (error) {
+  } catch (error: any) {
     logger.error({
       message: 'Lambda execution failed',
       error,
+      errorMessage: error.message,
     });
   }
   return { body: '', statusCode: 200 };

@@ -49,14 +49,17 @@ export class ConversationCommand extends ParentCommand {
         await this._bot.sendMessage(chatId,
           '[Either rate limit has been reached or your openai token has expired]');
       }
+      return;
     }
 
     try {
       const context: Context = await this._registry.getUserContext(message.chat.username);
+      context.addUserEntry(prompt);
       const response = await this.askAi(context);
+      context.addBotEntry(response);
       await Promise.all([
         this._bot.sendMessage(chatId, response),
-        this.captureConversation(message, prompt, response),
+        await this._registry.storeUserContext(context),
       ]);
     } catch (error: any) {
       logger.error(error);
@@ -68,6 +71,7 @@ export class ConversationCommand extends ParentCommand {
 
   private async askAi(context: Context, currentAttempt?: number) {
     let attempt = currentAttempt || 1;
+    logger.debug({ message: 'Conversation', conversation: context.conversation()});
     let aiResponse: string = await this._ai.generateAnswer(context.conversation(), context.username);
     if (aiResponse === '' && attempt <= this._maxAttempts) {
       logger.debug({

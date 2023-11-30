@@ -1,6 +1,7 @@
 import { ParentCommand } from './parent';
 import { Message, PhotoData } from '../model';
 import { logger } from '../utils/logger';
+import { Context } from '../user/context';
 
 export class AnalyseCommand extends ParentCommand {
   async execute(message: Message): Promise<void> {
@@ -10,10 +11,13 @@ export class AnalyseCommand extends ParentCommand {
 
     try {
       const imageUrl: string = await this.requestImageUrl(photo);
+      const context: Context = await this._registry.getUserContext(message.chat.username);
+      context.addUserEntry(caption);
       const analyseResult: string = await this._ai.analyseImage(imageUrl, caption);
+      context.addBotEntry(analyseResult);
       await Promise.all([
         this._bot.sendMessage(chatId, analyseResult),
-        this.captureConversation(message, caption, analyseResult),
+        await this._registry.storeUserContext(context),
       ]);
     } catch (error: any) {
       logger.error(error);
