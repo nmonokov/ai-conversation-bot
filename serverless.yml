@@ -45,7 +45,8 @@ functions:
   botWebhook:
     handler: src/handler.botWebhook
     memorySize: 128
-    timeout: 30
+    timeout: 60
+    maximumRetryAttempts: 0
     environment:
       AI_TEXT_MODEL: ${file(config/${self:custom.stage}.json):openai.textModel}
       AI_TEMPERATURE: ${file(config/${self:custom.stage}.json):openai.temperature}
