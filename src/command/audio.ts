@@ -28,10 +28,10 @@ export class SpeechToTextCommand extends ParentCommand {
       const audioUrl: string = await this.requestAudioUrl(voice);
       const textFromSpeech = await this.convertAudio(username, audioUrl);
       const context = await this._registry.getUserContext(username);
-      const response = await this.processMessage(context, textFromSpeech);
+      const response = await this.respondToAudio(context, textFromSpeech);
 
       await Promise.all([
-        this._bot.sendMessage(chatId, `[${username}: ${textFromSpeech}]\n${response}`),
+        this._bot.sendMessage(chatId, `_${username}: ${textFromSpeech}_\n${response}`),
         this._registry.storeUserContext(context),
       ]);
     } catch (error: any) {
@@ -72,7 +72,7 @@ export class SpeechToTextCommand extends ParentCommand {
     return textFromSpeech;
   }
 
-  private async processMessage(context: Context, textFromSpeech: string): Promise<string> {
+  private async respondToAudio(context: Context, textFromSpeech: string): Promise<string> {
     context.addUserEntry(textFromSpeech);
     const response = await this.askAi(context);
     context.addBotEntry(response);

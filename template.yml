@@ -8,3 +8,9 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+
+  MessageTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ${self:custom.names.topic}
+      DisplayName: ${self:custom.names.topic}

@@ -30,12 +30,18 @@ provider:
         - apigateway:GET
       Resource: arn:aws:apigateway:${aws:region}::/restapis
 
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource: !GetAtt MessageTopic.TopicArn
+
 custom:
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'eu-central-1'}
   names:
     user-context-bucket: user-context-${self:custom.stage}
     ffmpeg-layer-arn: arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:ffmpeg:4
+    topic: message-topic-${self:custom.stage}
   scripts:
     hooks:
       'after:deploy:finalize': serverless invoke -f schedule --stage ${self:custom.stage}
@@ -45,9 +51,23 @@ custom:
 
 functions:
   botWebhook:
-    handler: src/handler.botWebhook
+    handler: src/webhook.consume
     memorySize: 128
     timeout: 30
+    reservedConcurrency: 3
+    maximumRetryAttempts: 0
+    environment:
+      MESSAGE_TOPIC_ARN: !GetAtt MessageTopic.TopicArn
+    events:
+      - http:
+          path: conversation-webhook${self:provider.environment.BOT_TOKEN}
+          method: post
+
+  processMessage:
+    handler: src/handler.processMessage
+    memorySize: 512
+    timeout: 300
+    reservedConcurrency: 3
     maximumRetryAttempts: 0
     environment:
       AI_TEXT_MODEL: ${file(config/${self:custom.stage}.json):openai.textModel}
@@ -61,9 +81,9 @@ functions:
     layers:
       - ${self:custom.names.ffmpeg-layer-arn}
     events:
-      - http:
-          path: conversation-webhook${self:provider.environment.BOT_TOKEN}
-          method: post
+      - sns:
+          arn: !GetAtt MessageTopic.TopicArn
+          topicName: ${self:custom.names.topic}
 
   schedule:
     handler: src/schedule.resetWebhook

@@ -1,11 +1,11 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { SNSEvent, SNSEventRecord } from 'aws-lambda';
 import { property } from './utils/property';
 import { logger } from './utils/logger';
-import { ContextConfiguration, Message, PhotoData, TextModel, VoiceData } from './model';
+import { ContextConfiguration, TextModel } from './model';
 import { ImagineCommand } from './command/imagine';
 import { ConversationCommand } from './command/conversation';
 import { TelegramBot } from './wrappers/bot';
-import { handleExecution } from './wrappers/handlerWrapper';
+import { handleSnsExecution } from './wrappers/handlerWrapper';
 import { BehaviourCommand } from './command/behave';
 import { OpenAi } from './wrappers/ai/openai';
 import { UserRegistry } from './user/registry';
@@ -71,43 +71,37 @@ const IMAGINE_PREFIX = '/imagine';
 const BEHAVE_PREFIX = '/behave';
 
 /**
- * Lambda handler to process message to the Telegram Bot.
+ * Lambda handler to process message from the Telegram Bot.
+ * Supported Commands:
+ * - /imagine: image generation
+ * - /behave: AI behavior change
+ * - Photo: photo analysis
+ * - Voice: audio-to-text conversion and conversation
+ * - Other: general conversation handling
+ * @param {SNSEvent} event - The SNS event triggered by incoming messages from Telegram.
  */
-export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> =>
-  await handleExecution(async () => {
-    const body: any = JSON.parse(event.body || '{}');
-    logger.debug({
-      message: 'Capturing message.',
-      body,
-    });
+export const processMessage = async (event: SNSEvent): Promise<void> =>
+  await handleSnsExecution(async () => {
+    await Promise.all(event.Records.map(async (record: SNSEventRecord) => {
+      const snsMessage = JSON.parse(record.Sns.Message);
+      const { message, text } = snsMessage;
+      if (text?.startsWith(IMAGINE_PREFIX)) {
+        message.text = text.replace(`${IMAGINE_PREFIX} `, '');
+        await imagine.execute(message);
 
-    const message: Message = body?.message || body?.callback_query?.message
-    const text: string | undefined = message?.text || body?.callback_query?.data;
-    const photo: PhotoData[] | undefined = message.photo;
-    const voice: VoiceData | undefined = message.voice;
-    if (!text && !(photo && photo.length > 0) && !voice) {
-      logger.warn('Invoked with empty message or text');
-      return;
-    }
-    logger.debug({ message: 'After text validation', text, photo});
+      } else if (text?.startsWith(BEHAVE_PREFIX)) {
+        message.text = text?.replace(`${BEHAVE_PREFIX} `, '');
+        await behave.execute(message);
 
-    if (text?.startsWith(IMAGINE_PREFIX)) {
-      message.text = text.replace(`${IMAGINE_PREFIX} `, '');
-      await imagine.execute(message);
+      } else if (message.photo && message.photo.length > 0) {
+        await analyse.execute(message);
 
-    } else if (text?.startsWith(BEHAVE_PREFIX)) {
-      message.text = text?.replace(`${BEHAVE_PREFIX} `, '');
-      await behave.execute(message);
+      } else if (message.voice) {
+        await speechToText.execute(message);
 
-    } else if (message.photo && message.photo.length > 0) {
-      await analyse.execute(message);
-
-    } else if (message.voice) {
-      await speechToText.execute(message);
-
-    } else {
-      await conversation.execute(message);
-    }
-
+      } else {
+        await conversation.execute(message);
+      }
+    }));
     logger.debug('Finished response');
   });
