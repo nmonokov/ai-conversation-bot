@@ -3,7 +3,7 @@ service: ai-conversation-bot
 provider:
   name: aws
   runtime: nodejs18.x
-  region: eu-central-1
+  region: ${self:custom.region}
   stage: ${self:custom.stage}
   deploymentBucket:
     name: sls-deploy-${opt:account, 'serverless'}-${self:provider.region}
@@ -32,8 +32,10 @@ provider:
 
 custom:
   stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-central-1'}
   names:
     user-context-bucket: user-context-${self:custom.stage}
+    ffmpeg-layer-arn: arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:ffmpeg:1
   scripts:
     hooks:
       'after:deploy:finalize': serverless invoke -f schedule --stage ${self:custom.stage}
@@ -56,6 +58,8 @@ functions:
       CONTEXT_TOKENS_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.tokens}
       CONTEXT_SPLICE_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.splice}
       BUCKET_NAME: ${self:custom.names.user-context-bucket}
+    layers:
+      - ${self:custom.names.ffmpeg-layer-arn}
     events:
       - http:
           path: conversation-webhook${self:provider.environment.BOT_TOKEN}

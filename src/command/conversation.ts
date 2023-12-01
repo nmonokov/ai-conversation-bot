@@ -4,7 +4,7 @@ import { Message } from '../model';
 import { Context } from '../user/context';
 
 /**
- * Conversation command class and handles the conversational interactions with the user.
+ * Conversation command class that handles the conversational interactions with the user.
  * The execute method first checks:
  *  - if the incoming message is a command
  *  - if it was received from a group chat
@@ -21,8 +21,6 @@ import { Context } from '../user/context';
  * then it will be trimmed so to persist this fluent conversation and not to exceed the quota fast.
  */
 export class ConversationCommand extends ParentCommand {
-
-  private readonly _maxAttempts = 3;
 
   async execute(message: Message): Promise<void> {
     const chatId = message.chat.id;
@@ -59,7 +57,7 @@ export class ConversationCommand extends ParentCommand {
       context.addBotEntry(response);
       await Promise.all([
         this._bot.sendMessage(chatId, response),
-        await this._registry.storeUserContext(context),
+        this._registry.storeUserContext(context),
       ]);
     } catch (error: any) {
       logger.error(error);
@@ -67,20 +65,5 @@ export class ConversationCommand extends ParentCommand {
         await this._bot.sendMessage(chatId, '[You\'re sending too many requests. Please, wait a little bit.]');
       }
     }
-  }
-
-  private async askAi(context: Context, currentAttempt?: number) {
-    let attempt = currentAttempt || 1;
-    logger.debug({ message: 'Conversation', conversation: context.conversation()});
-    let aiResponse: string = await this._ai.generateAnswer(context.conversation(), context.username);
-    if (aiResponse === '' && attempt <= this._maxAttempts) {
-      logger.debug({
-        attempt,
-        username: context.username,
-      });
-      attempt++;
-      aiResponse = await this.askAi(context, attempt);
-    }
-    return aiResponse || '[Failed to generate message. Try once again.]';
   }
 }

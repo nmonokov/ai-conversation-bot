@@ -11,6 +11,7 @@ export interface Message {
   photo?: PhotoData[];
   reply_markup?: any;
   caption?: string;
+  voice?: VoiceData;
 }
 
 export interface Chat {
@@ -33,6 +34,14 @@ export interface PhotoData {
   width?: number;
   height?: number;
   file_path?: string;
+}
+
+export interface VoiceData {
+  duration?: number;
+  mime_type?: string;
+  file_id: string;
+  file_unique_id: string;
+  file_size: number;
 }
 
 export interface ContextConfiguration {

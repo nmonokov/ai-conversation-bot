@@ -102,6 +102,15 @@ export abstract class OpenAi {
     return answer?.message?.content || '';
   }
 
+  async speechToText(voiceData: any): Promise<string> {
+    const transcription = await this._api.audio.transcriptions.create({
+      model: 'whisper-1',
+      response_format: "text",
+      file: voiceData,
+    });
+    return transcription as unknown as string;
+  }
+
 }
 
 

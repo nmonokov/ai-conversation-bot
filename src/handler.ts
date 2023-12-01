@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { property } from './utils/property';
 import { logger } from './utils/logger';
-import { ContextConfiguration, Message, PhotoData, TextModel } from './model';
+import { ContextConfiguration, Message, PhotoData, TextModel, VoiceData } from './model';
 import { ImagineCommand } from './command/imagine';
 import { ConversationCommand } from './command/conversation';
 import { TelegramBot } from './wrappers/bot';
@@ -14,6 +14,7 @@ import { DavinciRegistry } from './user/davinci/davinciRegistry';
 import { TurboOpenAi } from './wrappers/ai/turbo/turboOpenAi';
 import { DavinciOpenAi } from './wrappers/ai/davinci/davinciOpenAi';
 import { AnalyseCommand } from './command/analyse';
+import { SpeechToTextCommand } from './command/audio';
 
 /** Fetching env variables */
 const BOT_TOKEN: string = property('BOT_TOKEN');
@@ -62,6 +63,7 @@ if (AI_TEXT_MODEL === TextModel.TURBO_3_5) {
 /** Handling bot commands */
 const imagine: ImagineCommand = new ImagineCommand(bot, openai, registry);
 const analyse: AnalyseCommand = new AnalyseCommand(bot, openai, registry);
+const speechToText: SpeechToTextCommand = new SpeechToTextCommand(bot, openai, registry);
 const conversation: ConversationCommand = new ConversationCommand(bot, openai, registry);
 const behave: BehaviourCommand = new BehaviourCommand(bot, openai, registry);
 
@@ -82,7 +84,8 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
     const message: Message = body?.message || body?.callback_query?.message
     const text: string | undefined = message?.text || body?.callback_query?.data;
     const photo: PhotoData[] | undefined = message.photo;
-    if (!text && !(photo && photo.length > 0)) {
+    const voice: VoiceData | undefined = message.voice;
+    if (!text && !(photo && photo.length > 0) && !voice) {
       logger.warn('Invoked with empty message or text');
       return;
     }
@@ -98,6 +101,9 @@ export const botWebhook = async (event: APIGatewayProxyEvent): Promise<APIGatewa
 
     } else if (message.photo && message.photo.length > 0) {
       await analyse.execute(message);
+
+    } else if (message.voice) {
+      await speechToText.execute(message);
 
     } else {
       await conversation.execute(message);

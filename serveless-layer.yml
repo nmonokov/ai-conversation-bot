@@ -1,0 +1,9 @@
+service: ai-conversation-bot-layer
+
+provider:
+  name: aws
+  region: ${opt:region, 'eu-central-1'}
+
+layers:
+  ffmpeg:
+    path: layer
