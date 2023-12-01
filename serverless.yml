@@ -35,7 +35,7 @@ custom:
   region: ${opt:region, 'eu-central-1'}
   names:
     user-context-bucket: user-context-${self:custom.stage}
-    ffmpeg-layer-arn: arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:ffmpeg:1
+    ffmpeg-layer-arn: arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:ffmpeg:4
   scripts:
     hooks:
       'after:deploy:finalize': serverless invoke -f schedule --stage ${self:custom.stage}
@@ -47,7 +47,7 @@ functions:
   botWebhook:
     handler: src/handler.botWebhook
     memorySize: 128
-    timeout: 60
+    timeout: 30
     maximumRetryAttempts: 0
     environment:
       AI_TEXT_MODEL: ${file(config/${self:custom.stage}.json):openai.textModel}

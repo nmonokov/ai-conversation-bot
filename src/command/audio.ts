@@ -7,7 +7,7 @@ import { spawnSync } from 'child_process';
 import { Context } from '../user/context';
 
 /**
- * Command to handle conversation with Open AI API through audio.
+ * Command to handle conversation with Open AI API through audio:
  *  - Fetches audio from telegram in .oga format.
  *  - Converts file from .oga to .mp3 format.
  *  - Sends .mp3 file to /audio/transcriptions endpoint to convert audio to text.

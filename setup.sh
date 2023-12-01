@@ -21,5 +21,6 @@ fi
 cd ..
 
 # Deploy lambda layer to AWS account. Should be executed once since several deployments will create
-# several versions of Lambda Layer
+# several versions of Lambda Layer and you need to reset the newly created ARN into
+# custom.names.ffmpeg-layer-arn property in serverless.yml
 npx serverless deploy --config serveless-layer.yml --region ${REGION}

@@ -1,9 +1,15 @@
-service: ai-conversation-bot-layer
+service: ffmpeg-layer
 
 provider:
   name: aws
   region: ${opt:region, 'eu-central-1'}
+  deploymentBucket:
+    name: sls-deploy-${opt:account, 'serverless'}-${self:provider.region}
+    serverSideEncryption: AES256
 
 layers:
   ffmpeg:
     path: layer
+
+plugins:
+  - serverless-deployment-bucket
