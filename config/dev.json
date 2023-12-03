@@ -13,5 +13,6 @@
       "tokens": 800,
       "splice": 600
     }
-  }
+  },
+  "restrictUsers": true
 }

@@ -49,6 +49,16 @@ export interface ContextConfiguration {
   spliceThreshold?: number;
 }
 
+export interface UserAcl {
+  username: string;
+  role: UserRole;
+}
+
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+}
+
 export enum TextModel {
   TURBO_3_5 = 'gpt-3.5-turbo',
   DAVINCI = 'text-davinci-003',

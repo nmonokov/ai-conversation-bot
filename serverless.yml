@@ -12,28 +12,31 @@ provider:
     LOG_LEVEL: ${param:log-level}
     BOT_TOKEN: ${param:bot-token}
     OPEN_AI_KEY: ${param:open-ai-key}
+    BUCKET_NAME: ${self:custom.names.user-context-bucket}
 
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - s3:ListBucket
-      Resource: '*'
+  iam:
+    role:
+      statements:
+      - Effect: Allow
+        Action:
+          - s3:ListBucket
+        Resource: '*'
 
-    - Effect: Allow
-      Action:
-        - s3:GetObject
-        - s3:PutObject
-      Resource: arn:aws:s3:::${self:custom.names.user-context-bucket}/*
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:PutObject
+        Resource: arn:aws:s3:::${self:custom.names.user-context-bucket}/*
 
-    - Effect: Allow
-      Action:
-        - apigateway:GET
-      Resource: arn:aws:apigateway:${aws:region}::/restapis
+      - Effect: Allow
+        Action:
+          - apigateway:GET
+        Resource: arn:aws:apigateway:${aws:region}::/restapis
 
-    - Effect: Allow
-      Action:
-        - sns:Publish
-      Resource: !GetAtt MessageTopic.TopicArn
+      - Effect: Allow
+        Action:
+          - sns:Publish
+        Resource: !GetAtt MessageTopic.TopicArn
 
 custom:
   stage: ${opt:stage, 'dev'}
@@ -42,12 +45,17 @@ custom:
     user-context-bucket: user-context-${self:custom.stage}
     ffmpeg-layer-arn: arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:ffmpeg:4
     topic: message-topic-${self:custom.stage}
-  scripts:
+  scriptable:
     hooks:
-      'after:deploy:finalize': serverless invoke -f schedule --stage ${self:custom.stage}
-        --param="log-level=${self:provider.environment.LOG_LEVEL}"
-        --param="bot-token=${self:provider.environment.BOT_TOKEN}"
-        --param="open-ai-key=${self:provider.environment.OPEN_AI_KEY}"
+      'after:deploy:finalize':
+        - serverless invoke -f schedule --stage ${self:custom.stage}
+          --param="log-level=${self:provider.environment.LOG_LEVEL}"
+          --param="bot-token=${self:provider.environment.BOT_TOKEN}"
+          --param="open-ai-key=${self:provider.environment.OPEN_AI_KEY}"
+  s3Sync:
+    - bucketName: ${self:custom.names.user-context-bucket}
+      deleteRemoved: false
+      localDir: setup/users
 
 functions:
   botWebhook:
@@ -58,6 +66,7 @@ functions:
     maximumRetryAttempts: 0
     environment:
       MESSAGE_TOPIC_ARN: !GetAtt MessageTopic.TopicArn
+      RESTRICT_USERS: ${file(config/${self:custom.stage}.json):restrictUsers}
     events:
       - http:
           path: conversation-webhook${self:provider.environment.BOT_TOKEN}
@@ -77,7 +86,6 @@ functions:
       AI_PRESENCE_PENALTY: ${file(config/${self:custom.stage}.json):openai.penalty.presence}
       CONTEXT_TOKENS_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.tokens}
       CONTEXT_SPLICE_THRESHOLD: ${file(config/${self:custom.stage}.json):context.threshold.splice}
-      BUCKET_NAME: ${self:custom.names.user-context-bucket}
     layers:
       - ${self:custom.names.ffmpeg-layer-arn}
     events:
@@ -104,4 +112,5 @@ plugins:
   - serverless-deployment-bucket
   - serverless-plugin-common-excludes
   - serverless-plugin-include-dependencies
-  - serverless-plugin-scripts
+  - serverless-scriptable-plugin
+  - serverless-s3-sync
