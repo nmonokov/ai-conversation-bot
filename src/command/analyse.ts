@@ -1,5 +1,5 @@
 import { ParentCommand } from './parent';
-import { Message, PhotoData } from '../model';
+import { Message } from '../model';
 import { logger } from '../utils/logger';
 import { Context } from '../user/context';
 
@@ -16,7 +16,7 @@ export class AnalyseCommand extends ParentCommand {
     const caption = message.caption || 'What’s in this image?';
 
     try {
-      const imageUrl: string = await this.requestImageUrl(photo);
+      const imageUrl: string = await this._bot.imageUrl(photo);
       const context: Context = await this._registry.getUserContext(message.chat.username);
       context.addUserEntry(caption);
       const analyseResult: string = await this._ai.analyseImage(imageUrl, caption);
@@ -31,13 +31,5 @@ export class AnalyseCommand extends ParentCommand {
         await this._bot.sendMessage(chatId, '[You\'re sending too many requests. Please, wait a little bit.]');
       }
     }
-  }
-
-  private async requestImageUrl(photo: PhotoData[]): Promise<string> {
-    const largePhoto: PhotoData = photo.reduce((firstPhoto: any, secondPhoto: any) =>
-      firstPhoto.file_size > secondPhoto.file_size ? firstPhoto : secondPhoto);
-    const fileUrl: string = await this._bot.getFileLink(largePhoto.file_id);
-    logger.debug({ fileUrl });
-    return fileUrl;
   }
 }

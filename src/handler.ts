@@ -16,6 +16,7 @@ import { DavinciOpenAi } from './wrappers/ai/davinci/davinciOpenAi';
 import { AnalyseCommand } from './command/analyse';
 import { SpeechToTextCommand } from './command/audio';
 import { MaskCommand } from './command/mask';
+import { ReimagineCommand } from './command/reimagine';
 
 /** Fetching env variables */
 const BOT_TOKEN: string = property('BOT_TOKEN');
@@ -63,6 +64,7 @@ if (AI_TEXT_MODEL === TextModel.TURBO_3_5) {
 
 /** Handling bot commands */
 const imagine: ImagineCommand = new ImagineCommand(bot, openai, registry);
+const reimagine: ReimagineCommand = new ReimagineCommand(bot, openai, registry);
 const analyse: AnalyseCommand = new AnalyseCommand(bot, openai, registry);
 const speechToText: SpeechToTextCommand = new SpeechToTextCommand(bot, openai, registry);
 const conversation: ConversationCommand = new ConversationCommand(bot, openai, registry);
@@ -70,6 +72,7 @@ const behave: BehaviourCommand = new BehaviourCommand(bot, openai, registry);
 const mask: MaskCommand = new MaskCommand(bot, openai, registry);
 
 const IMAGINE_PREFIX = '/imagine';
+const REIMAGINE_PREFIX = '/reimagine';
 const BEHAVE_PREFIX = '/behave';
 const MASK_PREFIX = '/mask';
 
@@ -77,6 +80,7 @@ const MASK_PREFIX = '/mask';
  * Lambda handler to process message from the Telegram Bot.
  * Supported Commands:
  * - /imagine: image generation
+ * - /reimagine: create image variation
  * - /behave: AI behavior change
  * - Photo: photo analysis
  * - Voice: audio-to-text conversion and conversation
@@ -90,9 +94,12 @@ export const processMessage = async (event: SNSEvent): Promise<void> =>
       const { message, text } = snsMessage;
       logger.debug({ text });
       if (text?.startsWith(IMAGINE_PREFIX)) {
-        logger.debug({ message: 'inside /imagine command '});
+        logger.debug({ message: 'inside /imagine command ' });
         message.text = text.replace(`${IMAGINE_PREFIX} `, '');
         await imagine.execute(message);
+
+      } else if (text.startsWith(REIMAGINE_PREFIX)) {
+        await reimagine.execute(message);
 
       } else if (text?.startsWith(BEHAVE_PREFIX)) {
         logger.debug({ message: 'inside /behave command '});

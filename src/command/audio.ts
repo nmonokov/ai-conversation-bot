@@ -1,7 +1,6 @@
 import { ParentCommand } from './parent';
-import { Message, VoiceData } from '../model';
+import { Message } from '../model';
 import { logger } from '../utils/logger';
-import axios from 'axios';
 import { Context } from '../user/context';
 import { FileEditor } from '../utils/fileEditor';
 
@@ -24,8 +23,8 @@ export class SpeechToTextCommand extends ParentCommand {
       return;
     }
     try {
-      const audioUrl: string = await this.requestAudioUrl(voice);
-      const textFromSpeech = await this.convertAudio(username, audioUrl);
+      const audioData: Buffer = await this._bot.audioAsBuffer(voice);
+      const textFromSpeech = await this.convertAudio(username, audioData);
       const context = await this._registry.getUserContext(username);
       const response = await this.respondToAudio(context, textFromSpeech);
 
@@ -35,21 +34,14 @@ export class SpeechToTextCommand extends ParentCommand {
       ]);
     } catch (error: any) {
       logger.error({ message: 'Failed on reading and sending to ai', error, errorMessage: error.message });
-      return;
+      await this._bot.sendMessage(chatId, 'Sorry, can\'t fetch the voice data.');
     }
   }
 
-  private async requestAudioUrl(voice: VoiceData): Promise<string> {
-    const fileUrl: string = await this._bot.getFileLink(voice.file_id);
-    logger.debug({ fileUrl });
-    return fileUrl;
-  }
-
-  private async convertAudio(username: string, audioUrl: string): Promise<string> {
-    const axiosResponse = await axios.get(audioUrl, { responseType: 'arraybuffer' });
+  private async convertAudio(username: string, audioData: Buffer): Promise<string> {
     const tmpFolderPath = `/tmp/${username}`;
     const fileEditor = new FileEditor(tmpFolderPath);
-    const mp3FileReadStream = await fileEditor.convertToMp3(axiosResponse.data);
+    const mp3FileReadStream = await fileEditor.convertToMp3(audioData);
     const textFromSpeech = await this._ai.speechToText(mp3FileReadStream);
     fileEditor.removeTmpFiles();
     return textFromSpeech;

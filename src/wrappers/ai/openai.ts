@@ -75,7 +75,12 @@ export abstract class OpenAi {
       model: 'dall-e-3',
       size: '1024x1024',
     });
-    return imageCreateResponse.data[0].url || 'Not generated';
+
+    const generatedImageUrl = imageCreateResponse.data[0].url;
+    if (!generatedImageUrl) {
+      throw new Error('Failed to generate image.');
+    }
+    return generatedImageUrl;
   }
 
   async analyseImage(imageUrl: string, caption: string): Promise<string> {
@@ -99,7 +104,7 @@ export abstract class OpenAi {
       }],
     });
     const answer = completionResponse.choices.find((choice: any) => choice.finish_details?.type === 'stop');
-    return answer?.message?.content || '';
+    return answer?.message?.content || 'Failed to analyse this image.';
   }
 
   async speechToText(voiceData: any): Promise<string> {
@@ -121,7 +126,33 @@ export abstract class OpenAi {
       prompt,
       response_format: 'url',
     });
-    return imagesResponse.data[0].url || 'Not generated';
+
+    const generatedImageUrl = imagesResponse.data[0].url;
+    if (!generatedImageUrl) {
+      throw new Error('Failed to generate image.');
+    }
+    return generatedImageUrl;
+  }
+
+  /**
+   * Generates an image based on another image.
+   *
+   * @param imageData buffer of the source image.
+   */
+  async generateVariation(imageData: any): Promise<string> {
+    const imageVariationResponse = await this._api.images.createVariation({
+      model: 'dall-e-2',
+      image: imageData,
+      n: 1,
+      response_format: 'url',
+      size: '1024x1024',
+    });
+
+    const generatedImageUrl = imageVariationResponse.data[0].url;
+    if (!generatedImageUrl) {
+      throw new Error('Failed to generate image.');
+    }
+    return generatedImageUrl;
   }
 
 }
