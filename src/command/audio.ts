@@ -2,9 +2,8 @@ import { ParentCommand } from './parent';
 import { Message, VoiceData } from '../model';
 import { logger } from '../utils/logger';
 import axios from 'axios';
-import * as fs from 'fs';
-import { spawnSync } from 'child_process';
 import { Context } from '../user/context';
+import { FileEditor } from '../utils/fileEditor';
 
 /**
  * Command to handle conversation with Open AI API through audio:
@@ -49,26 +48,10 @@ export class SpeechToTextCommand extends ParentCommand {
   private async convertAudio(username: string, audioUrl: string): Promise<string> {
     const axiosResponse = await axios.get(audioUrl, { responseType: 'arraybuffer' });
     const tmpFolderPath = `/tmp/${username}`;
-    const sourceFilePath = `${tmpFolderPath}/source.oga`;
-    const outputFilePath = `${tmpFolderPath}/output.mp3`;
-    if (!fs.existsSync(tmpFolderPath)) {
-      fs.mkdirSync(tmpFolderPath, { recursive: true });
-    }
-    fs.writeFileSync(sourceFilePath, axiosResponse.data);
-    spawnSync('/opt/ffmpeg/ffmpeg',
-      [
-        '-i',
-        `${sourceFilePath}`,
-        '-f',
-        'mp3',
-        `${outputFilePath}`
-      ],
-      { stdio: 'inherit' });
-    const readStream = fs.createReadStream(outputFilePath);
-
-    const textFromSpeech = await this._ai.speechToText(readStream);
-    fs.unlinkSync(sourceFilePath);
-    fs.unlinkSync(outputFilePath);
+    const fileEditor = new FileEditor(tmpFolderPath);
+    const mp3FileReadStream = await fileEditor.convertToMp3(axiosResponse.data);
+    const textFromSpeech = await this._ai.speechToText(mp3FileReadStream);
+    fileEditor.removeTmpFiles();
     return textFromSpeech;
   }
 

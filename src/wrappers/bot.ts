@@ -19,12 +19,13 @@ export class TelegramBot {
     await axios.get(url);
   }
 
-  async sendPhoto(chatId: number, photoUrl: string): Promise<void> {
+  async sendPhoto(chatId: number, photoUrl: string, caption?: string): Promise<void> {
     const url = `${this._url}/sendPhoto`;
     const body = {
       chat_id: chatId,
       photo: photoUrl,
-    }
+      caption,
+    };
     await axios.post(url, body);
   }
 

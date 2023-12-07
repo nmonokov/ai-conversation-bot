@@ -15,6 +15,7 @@ import { TurboOpenAi } from './wrappers/ai/turbo/turboOpenAi';
 import { DavinciOpenAi } from './wrappers/ai/davinci/davinciOpenAi';
 import { AnalyseCommand } from './command/analyse';
 import { SpeechToTextCommand } from './command/audio';
+import { MaskCommand } from './command/mask';
 
 /** Fetching env variables */
 const BOT_TOKEN: string = property('BOT_TOKEN');
@@ -66,9 +67,11 @@ const analyse: AnalyseCommand = new AnalyseCommand(bot, openai, registry);
 const speechToText: SpeechToTextCommand = new SpeechToTextCommand(bot, openai, registry);
 const conversation: ConversationCommand = new ConversationCommand(bot, openai, registry);
 const behave: BehaviourCommand = new BehaviourCommand(bot, openai, registry);
+const mask: MaskCommand = new MaskCommand(bot, openai, registry);
 
 const IMAGINE_PREFIX = '/imagine';
 const BEHAVE_PREFIX = '/behave';
+const MASK_PREFIX = '/mask';
 
 /**
  * Lambda handler to process message from the Telegram Bot.
@@ -85,21 +88,32 @@ export const processMessage = async (event: SNSEvent): Promise<void> =>
     await Promise.all(event.Records.map(async (record: SNSEventRecord) => {
       const snsMessage = JSON.parse(record.Sns.Message);
       const { message, text } = snsMessage;
+      logger.debug({ text });
       if (text?.startsWith(IMAGINE_PREFIX)) {
+        logger.debug({ message: 'inside /imagine command '});
         message.text = text.replace(`${IMAGINE_PREFIX} `, '');
         await imagine.execute(message);
 
       } else if (text?.startsWith(BEHAVE_PREFIX)) {
+        logger.debug({ message: 'inside /behave command '});
         message.text = text?.replace(`${BEHAVE_PREFIX} `, '');
         await behave.execute(message);
 
+      } else if (text?.startsWith(MASK_PREFIX)) {
+        logger.debug({ message: 'inside /mask command '});
+        message.text = text?.replace(`${MASK_PREFIX} `, '');
+        await mask.execute(message);
+
       } else if (message.photo && message.photo.length > 0) {
+        logger.debug({ message: 'inside analyse command '});
         await analyse.execute(message);
 
       } else if (message.voice) {
+        logger.debug({ message: 'inside voice command '});
         await speechToText.execute(message);
 
       } else {
+        logger.debug({ message: 'inside convo command '});
         await conversation.execute(message);
       }
     }));

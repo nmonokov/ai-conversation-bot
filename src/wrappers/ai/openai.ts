@@ -111,6 +111,19 @@ export abstract class OpenAi {
     return transcription as unknown as string;
   }
 
+  async inpaint(imageData: any, maskData: any, prompt: string): Promise<string> {
+    const imagesResponse = await this._api.images.edit({
+      model: 'dall-e-2',
+      image: imageData,
+      mask: maskData,
+      n: 1,
+      size: '1024x1024',
+      prompt,
+      response_format: 'url',
+    });
+    return imagesResponse.data[0].url || 'Not generated';
+  }
+
 }
 
 

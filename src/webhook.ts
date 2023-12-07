@@ -35,7 +35,7 @@ export const consume = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
 
     const message: Message = body?.message || body?.callback_query?.message
-    const text: string | undefined = message?.text || body?.callback_query?.data;
+    const text: string | undefined = message?.text || message?.caption || body?.callback_query?.data;
     const photo: PhotoData[] | undefined = message.photo;
     const voice: VoiceData | undefined = message.voice;
     if (!text && !(photo && photo.length > 0) && !voice) {
