@@ -1,7 +1,6 @@
 import { ParentCommand } from './parent';
-import { Message, PhotoData } from '../model';
+import { Message } from '../model';
 import { logger } from '../utils/logger';
-import axios from 'axios';
 import { FileEditor } from '../utils/fileEditor';
 
 /**
@@ -21,7 +20,7 @@ export class MaskCommand extends ParentCommand {
     const username = message.chat.username;
     const sourcePhoto = message.reply_to_message?.photo || [];
     const maskedPhoto = message.photo || [];
-    const caption = message.text || 'Fill with something suitable';
+    const caption = message.caption || 'Fill with something suitable';
     try {
       logger.debug({
         message,
@@ -29,11 +28,11 @@ export class MaskCommand extends ParentCommand {
         maskedPhoto,
         caption,
       });
-      const [sourceUrl, maskUrl] = await Promise.all([
-        this.requestImageUrl(sourcePhoto),
-        this.requestImageUrl(maskedPhoto),
+      const [sourceImageBuffer, maskImageBuffer] = await Promise.all([
+        this._bot.imageAsBuffer(sourcePhoto),
+        this._bot.imageAsBuffer(maskedPhoto),
       ]);
-      const inpaintedImageUrl = await this.inpaintedImage(username, caption, sourceUrl, maskUrl);
+      const inpaintedImageUrl = await this.inpaintedImage(username, caption, sourceImageBuffer, maskImageBuffer);
       await this._bot.sendPhoto(chatId, inpaintedImageUrl);
     } catch (error: any) {
       logger.error(error);
@@ -43,24 +42,17 @@ export class MaskCommand extends ParentCommand {
     }
   }
 
-  private async requestImageUrl(photo: PhotoData[]): Promise<string> {
-    const largePhoto: PhotoData = photo.reduce((firstPhoto: any, secondPhoto: any) =>
-      firstPhoto.file_size > secondPhoto.file_size ? firstPhoto : secondPhoto);
-    const fileUrl: string = await this._bot.getFileLink(largePhoto.file_id);
-    logger.debug({ fileUrl });
-    return fileUrl;
-  }
-
-  private async inpaintedImage(username: string, prompt: string, sourceUrl: string, maskUrl: string): Promise<string> {
-    const [sourceResponse, maskResponse] = await Promise.all([
-      axios.get(sourceUrl, { responseType: 'arraybuffer' }),
-      axios.get(maskUrl, { responseType: 'arraybuffer' }),
-    ]);
+  private async inpaintedImage(
+    username: string,
+    prompt: string,
+    sourceImageBuffer: Buffer,
+    maskImageBuffer: Buffer,
+  ): Promise<string> {
     const tmpFolderPath = `/tmp/${username}`;
     const fileEditor = new FileEditor(tmpFolderPath);
     const [sourcePngReadStream, maskReadStream] = await Promise.all([
-      fileEditor.convertToPng(sourceResponse.data),
-      fileEditor.convertToMask(maskResponse.data),
+      fileEditor.convertToPng(sourceImageBuffer),
+      fileEditor.convertToMask(maskImageBuffer),
     ]);
 
     const resultUrl = await this._ai.inpaint(sourcePngReadStream, maskReadStream, prompt);

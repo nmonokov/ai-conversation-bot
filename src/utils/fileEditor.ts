@@ -105,7 +105,9 @@ export class FileEditor {
       .output(output)
       .on('end', () => {
         logger.debug({
-          message: 'Image converted',
+          message: 'File converted',
+          input,
+          output,
         });
         resolve(output);
       })

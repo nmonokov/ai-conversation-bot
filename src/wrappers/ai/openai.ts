@@ -75,6 +75,7 @@ export abstract class OpenAi {
       model: 'dall-e-3',
       size: '1024x1024',
     });
+    logger.debug({ imageCreateResponse });
 
     const generatedImageUrl = imageCreateResponse.data[0].url;
     if (!generatedImageUrl) {
@@ -103,6 +104,8 @@ export abstract class OpenAi {
         ],
       }],
     });
+    logger.debug({ completionResponse });
+
     const answer = completionResponse.choices.find((choice: any) => choice.finish_details?.type === 'stop');
     return answer?.message?.content || 'Failed to analyse this image.';
   }
@@ -113,6 +116,8 @@ export abstract class OpenAi {
       response_format: "text",
       file: voiceData,
     });
+    logger.debug({ transcription });
+
     return transcription as unknown as string;
   }
 
@@ -126,6 +131,7 @@ export abstract class OpenAi {
       prompt,
       response_format: 'url',
     });
+    logger.debug({ imagesResponse });
 
     const generatedImageUrl = imagesResponse.data[0].url;
     if (!generatedImageUrl) {
@@ -147,6 +153,7 @@ export abstract class OpenAi {
       response_format: 'url',
       size: '1024x1024',
     });
+    logger.debug({ imageVariationResponse });
 
     const generatedImageUrl = imageVariationResponse.data[0].url;
     if (!generatedImageUrl) {

@@ -1,7 +1,7 @@
 import { SNSEvent, SNSEventRecord } from 'aws-lambda';
 import { property } from './utils/property';
 import { logger } from './utils/logger';
-import { ContextConfiguration, TextModel } from './model';
+import { ContextConfiguration, Message, TextModel } from './model';
 import { ImagineCommand } from './command/imagine';
 import { ConversationCommand } from './command/conversation';
 import { TelegramBot } from './wrappers/bot';
@@ -91,14 +91,16 @@ export const processMessage = async (event: SNSEvent): Promise<void> =>
   await handleSnsExecution(async () => {
     await Promise.all(event.Records.map(async (record: SNSEventRecord) => {
       const snsMessage = JSON.parse(record.Sns.Message);
-      const { message, text } = snsMessage;
+      const { message }: { message: Message } = snsMessage;
+      const { text, caption } = message;
       logger.debug({ text });
       if (text?.startsWith(IMAGINE_PREFIX)) {
         logger.debug({ message: 'inside /imagine command ' });
         message.text = text.replace(`${IMAGINE_PREFIX} `, '');
         await imagine.execute(message);
 
-      } else if (text.startsWith(REIMAGINE_PREFIX)) {
+      } else if (text?.startsWith(REIMAGINE_PREFIX)) {
+        logger.debug({ message: 'inside /reimagine command ' });
         await reimagine.execute(message);
 
       } else if (text?.startsWith(BEHAVE_PREFIX)) {
@@ -106,9 +108,9 @@ export const processMessage = async (event: SNSEvent): Promise<void> =>
         message.text = text?.replace(`${BEHAVE_PREFIX} `, '');
         await behave.execute(message);
 
-      } else if (text?.startsWith(MASK_PREFIX)) {
+      } else if (caption?.startsWith(MASK_PREFIX)) {
         logger.debug({ message: 'inside /mask command '});
-        message.text = text?.replace(`${MASK_PREFIX} `, '');
+        message.caption = caption?.replace(`${MASK_PREFIX} `, '');
         await mask.execute(message);
 
       } else if (message.photo && message.photo.length > 0) {

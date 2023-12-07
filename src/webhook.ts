@@ -54,7 +54,7 @@ export const consume = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     await sns.publish({
       TopicArn: MESSAGE_TOPIC_ARN,
-      Message: JSON.stringify({ message, text, role: userAcl?.role }),
+      Message: JSON.stringify({ message, role: userAcl?.role }),
     }).promise();
   });
 
