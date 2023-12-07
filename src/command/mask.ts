@@ -16,10 +16,6 @@ import { FileEditor } from '../utils/fileEditor';
  */
 export class MaskCommand extends ParentCommand {
 
-  /**
-   * Inpaints an image using an AI service.
-   * @param message - The Telegram message triggering the command.
-   */
   async execute(message: Message): Promise<void> {
     const chatId = message.chat.id;
     const username = message.chat.username;
