@@ -21,7 +21,7 @@ export class ImagineCommand extends ParentCommand {
       await this._bot.sendPhoto(chatId, imageUrl);
     } catch (error) {
       logger.error(error);
-      await this._bot.sendMessage(chatId, '[Failed to generate image]');
+      await this._bot.sendMessage(chatId, 'Failed to generate imageю');
     }
   }
 }

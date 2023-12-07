@@ -21,6 +21,15 @@ export class MaskCommand extends ParentCommand {
     const sourcePhoto = message.reply_to_message?.photo || [];
     const maskedPhoto = message.photo || [];
     const caption = message.caption || 'Fill with something suitable';
+    if (!sourcePhoto) {
+      await this._bot.sendMessage(chatId, 'Reply to an image to reimagine.');
+      return;
+    }
+    if (!maskedPhoto) {
+      await this._bot.sendMessage(chatId, 'Add mask to your request.');
+      return;
+    }
+
     try {
       logger.debug({
         message,
@@ -35,9 +44,14 @@ export class MaskCommand extends ParentCommand {
       const inpaintedImageUrl = await this.inpaintedImage(username, caption, sourceImageBuffer, maskImageBuffer);
       await this._bot.sendPhoto(chatId, inpaintedImageUrl);
     } catch (error: any) {
-      logger.error(error);
+      logger.error({
+        errorMessage: error.message,
+        error,
+      });
       if (error?.message.startsWith('Rate limit reached')) {
         await this._bot.sendMessage(chatId, '[You\'re sending too many requests. Please, wait a little bit.]');
+      } else {
+        await this._bot.sendMessage(chatId, error.message);
       }
     }
   }

@@ -63,6 +63,8 @@ export class ConversationCommand extends ParentCommand {
       logger.error(error);
       if (error?.message.startsWith('Rate limit reached')) {
         await this._bot.sendMessage(chatId, '[You\'re sending too many requests. Please, wait a little bit.]');
+      } else {
+        await this._bot.sendMessage(chatId, error.message);
       }
     }
   }
