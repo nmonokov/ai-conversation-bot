@@ -28,8 +28,9 @@ export class SpeechToTextCommand extends ParentCommand {
       const context = await this._registry.getUserContext(username);
       const response = await this.respondToAudio(context, textFromSpeech);
 
+      const formattedMessage = `_${username.replace('_', '')}: ${textFromSpeech}_\n${response}`;
       await Promise.all([
-        this._bot.sendMessage(chatId, `_${username}: ${textFromSpeech}_\n${response}`),
+        this._bot.sendMessage(chatId, formattedMessage),
         this._registry.storeUserContext(context),
       ]);
     } catch (error: any) {
