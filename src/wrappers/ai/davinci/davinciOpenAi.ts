@@ -1,13 +1,14 @@
 import { logger } from '../../../utils/logger';
 import { OpenAi } from '../openai';
 import { Completion, CompletionChoice } from 'openai/src/resources/completions';
+import { AnswerData } from '../../../model';
 
 /**
  * Legacy text model system. Better use turbo instead.
  */
 export class DavinciOpenAi extends OpenAi {
 
-  async generateAnswer(prompt: any, username: string): Promise<string> {
+  async generateAnswer(prompt: any, username: string): Promise<AnswerData> {
     const completionResponse: Completion = await this._api.completions.create({
       model: this._textModel,
       prompt,
@@ -18,7 +19,9 @@ export class DavinciOpenAi extends OpenAi {
       presence_penalty: this._presencePenalty,
     });
     logger.debug({ response: completionResponse })
-    return this._pickChoice(completionResponse.choices);
+    return {
+      answer: this._pickChoice(completionResponse.choices),
+    };
   }
 
   private _pickChoice(choices: CompletionChoice[]): string {

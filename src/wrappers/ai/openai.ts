@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { logger } from '../../utils/logger';
 import Moderation = OpenAI.Moderation;
 import { ChatCompletion } from 'openai/resources';
+import { AnswerData } from '../../model';
 
 /**
  * Wrapper class for OpenAI API. Contains all configurations that are set up by a builder inner class.
@@ -61,7 +62,7 @@ export abstract class OpenAi {
    * @param prompt full dialogue sequence.
    * @param username of the user who is chatting.
    */
-  abstract generateAnswer(prompt: any, username: string): Promise<string>;
+  abstract generateAnswer(prompt: any, username: string): Promise<AnswerData>;
 
   /**
    * Generate an image based on prompt.
@@ -84,7 +85,7 @@ export abstract class OpenAi {
     return generatedImageUrl;
   }
 
-  async analyseImage(imageUrl: string, caption: string): Promise<string> {
+  async analyseImage(imageUrl: string, caption: string): Promise<AnswerData> {
     const completionResponse: ChatCompletion = await this._api.chat.completions.create({
       model: 'gpt-4-vision-preview',
       max_tokens: this._maxTokens,
@@ -108,7 +109,9 @@ export abstract class OpenAi {
 
     const answer = completionResponse.choices.find((choice: any) => choice.finish_reason === 'stop');
     logger.debug({ answer });
-    return answer?.message?.content || 'Failed to analyse this image.';
+    return {
+      answer: answer?.message?.content || 'Failed to analyse this image.',
+    }
   }
 
   async speechToText(voiceData: any): Promise<string> {

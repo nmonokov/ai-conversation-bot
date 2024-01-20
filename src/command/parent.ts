@@ -1,4 +1,4 @@
-import { Message } from '../model';
+import { AnswerData, Message } from '../model';
 import { TelegramBot } from '../wrappers/bot';
 import { OpenAi } from '../wrappers/ai/openai';
 import { UserRegistry } from '../user/registry';
@@ -21,16 +21,19 @@ export abstract class ParentCommand {
 
   protected async askAi(context: Context, currentAttempt?: number) {
     let attempt = currentAttempt || 1;
-    logger.debug({ message: 'Conversation', conversation: context.conversation()});
-    let aiResponse: string = await this._ai.generateAnswer(context.conversation(), context.username);
-    if (aiResponse === '' && attempt <= this._maxAttempts) {
+    const conversation = context.conversation();
+    logger.debug({ message: 'Conversation', conversation });
+    let answerData: AnswerData = await this._ai.generateAnswer(conversation, context.username);
+    if (answerData.answer === '' && attempt <= this._maxAttempts) {
       logger.debug({
         attempt,
         username: context.username,
       });
       attempt++;
-      aiResponse = await this.askAi(context, attempt);
+      answerData = await this.askAi(context, attempt);
+    } else if (attempt > this._maxAttempts) {
+      answerData.answer = '[Failed to generate message. Try once again.]';
     }
-    return aiResponse || '[Failed to generate message. Try once again.]';
+    return answerData;
   }
 }

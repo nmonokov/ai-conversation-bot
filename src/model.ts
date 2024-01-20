@@ -1,6 +1,11 @@
 export interface ConversationEntry {
-  tokens: number;
+  tokens?: number;
   value: string;
+}
+
+export interface AnswerData {
+  answer: string;
+  totalTokens?: number;
 }
 
 export interface Message {

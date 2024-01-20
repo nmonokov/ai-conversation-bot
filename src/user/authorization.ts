@@ -36,14 +36,14 @@ export class Authorization {
     if (userAcl) {
       return userAcl;
     }
-    return await this.readPromBucket(username);
+    return await this.readFromBucket(username);
   }
 
   private readFromMemory(username: string): UserAcl | undefined {
     return this._cachedAcls[username];
   }
 
-  private async readPromBucket(username: string): Promise<UserAcl | undefined> {
+  private async readFromBucket(username: string): Promise<UserAcl | undefined> {
     const s3Response = await this._s3.getObject({
       Bucket: this._bucketName,
       Key: USER_ACL_FILE_NAME,

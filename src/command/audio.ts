@@ -50,8 +50,8 @@ export class SpeechToTextCommand extends ParentCommand {
 
   private async respondToAudio(context: Context, textFromSpeech: string): Promise<string> {
     context.addUserEntry(textFromSpeech);
-    const response = await this.askAi(context);
-    context.addBotEntry(response);
-    return response;
+    const { answer, totalTokens } = await this.askAi(context);
+    context.addBotEntry(answer, totalTokens);
+    return answer;
   }
 }

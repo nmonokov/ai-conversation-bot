@@ -19,10 +19,10 @@ export class AnalyseCommand extends ParentCommand {
       const imageUrl: string = await this._bot.imageUrl(photo);
       const context: Context = await this._registry.getUserContext(message.chat.username);
       context.addUserEntry(caption);
-      const analyseResult: string = await this._ai.analyseImage(imageUrl, caption);
-      context.addBotEntry(analyseResult);
+      const { answer } = await this._ai.analyseImage(imageUrl, caption);
+      context.addBotEntry(answer);
       await Promise.all([
-        this._bot.sendMessage(chatId, analyseResult),
+        this._bot.sendMessage(chatId, answer),
         this._registry.storeUserContext(context),
       ]);
     } catch (error: any) {

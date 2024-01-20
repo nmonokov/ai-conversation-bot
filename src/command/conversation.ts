@@ -53,10 +53,10 @@ export class ConversationCommand extends ParentCommand {
     try {
       const context: Context = await this._registry.getUserContext(message.chat.username);
       context.addUserEntry(prompt);
-      const response = await this.askAi(context);
-      context.addBotEntry(response);
+      const { answer, totalTokens } = await this.askAi(context);
+      context.addBotEntry(answer, totalTokens);
       await Promise.all([
-        this._bot.sendMessage(chatId, response),
+        this._bot.sendMessage(chatId, answer),
         this._registry.storeUserContext(context),
       ]);
     } catch (error: any) {

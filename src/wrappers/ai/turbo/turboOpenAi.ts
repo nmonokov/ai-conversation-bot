@@ -2,6 +2,7 @@ import { OpenAi } from '../openai';
 import { logger } from '../../../utils/logger';
 import { ChatCompletion } from 'openai/src/resources/chat/completions';
 import Choice = ChatCompletion.Choice;
+import { AnswerData } from '../../../model';
 
 /**
  * This is an instance of a new open ai version of a text model which can cater for gpt-3.5-turbo and gpt-4.
@@ -9,7 +10,7 @@ import Choice = ChatCompletion.Choice;
  */
 export class TurboOpenAi extends OpenAi {
 
-  async generateAnswer(prompt: any, username: string): Promise<string> {
+  async generateAnswer(prompt: any, username: string): Promise<AnswerData> {
     const completionResponse: ChatCompletion = await this._api.chat.completions.create({
       model: this._textModel,
       messages: prompt,
@@ -20,7 +21,10 @@ export class TurboOpenAi extends OpenAi {
       presence_penalty: this._presencePenalty,
     });
     logger.debug({ response: completionResponse })
-    return  this._pickChoice(completionResponse.choices);
+    return {
+      answer: this._pickChoice(completionResponse.choices),
+      totalTokens: completionResponse.usage?.total_tokens,
+    }
   }
 
   private _pickChoice(choices: Choice[]): string {

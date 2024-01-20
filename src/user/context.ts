@@ -1,7 +1,5 @@
 import { ConversationEntry } from '../model';
 
-const CHARACTERS_IN_TOKEN: number = 4;
-
 /**
  * UserContext is used to keep track of a user's conversation context with the chatbot.
  * Text is represented as 'tokens' which is an OpenAI specific way of measuring data.
@@ -12,6 +10,7 @@ export abstract class Context {
   protected _conversationContext: ConversationEntry[];
   protected readonly _tokensThreshold: number;
   protected readonly _spliceThreshold: number;
+  protected _totalTokens: number;
   protected _behaviour: any;
 
   constructor(
@@ -19,12 +18,14 @@ export abstract class Context {
     conversationContext?: ConversationEntry[],
     tokensThreshold?: number,
     spliceThreshold?: number,
+    totalTokens?: number,
     behaviour?: string,
   ) {
     this.username = username;
     this._conversationContext = conversationContext || [];
     this._tokensThreshold = tokensThreshold || 500;
     this._spliceThreshold = spliceThreshold || 250;
+    this._totalTokens = totalTokens || 0;
     this._behaviour = behaviour || 'AI is a chatbot designed to assist users with their inquiries.' +
       ' Its purpose is to help users find the information they need and answer any questions they may have.' +
       ' Users are encouraged to describe their issue or question in as much detail as possible, and the chatbot' +
@@ -39,7 +40,7 @@ export abstract class Context {
   /**
    * Saves bot response. Cleans empty lines.
    */
-  abstract addBotEntry(prompt: string): void;
+  abstract addBotEntry(prompt: string, tokens?: number): void;
 
   /**
    * Returns a string that represents the user's entire conversation history with the chatbot.
@@ -57,45 +58,14 @@ export abstract class Context {
   }
 
   /**
-   * Calculating prompt length based on the model version.
-   * @param prompt could be as a string or as a map.
-   */
-  abstract getPromptLength(prompt: any): number;
-
-  /**
    * Adds an entry to the _conversationContext array
    * and trims it if the total number of tokens exceeds the _tokensThreshold
    * @param prompt to save
    */
-  protected _addEntry(prompt: any): void {
-    const characters: number = this.getPromptLength(prompt);
-    const textTokens: number = characters / CHARACTERS_IN_TOKEN;
-    const tokens = this._tokens();
-    if ((textTokens + tokens) > this._tokensThreshold) {
-      this._trimConversationContext();
-    }
-    this._conversationContext.push({
-      tokens: textTokens,
-      value: prompt,
-    });
-  }
+  abstract addEntry(prompt: any): void;
 
-  private _trimConversationContext() {
-    let indexForSplice = 0;
-    let tokensBeforeThreshold = 0;
-    for (let index = 0; index < this._conversationContext.length; index++) {
-      tokensBeforeThreshold += this._conversationContext[index].tokens;
-      if (tokensBeforeThreshold >= this._spliceThreshold) {
-        indexForSplice = index;
-        break;
-      }
-    }
-    this._conversationContext.splice(0, indexForSplice + 1);
-  }
-
-  private _tokens() {
-    return this._conversationContext
-      .map((entry: ConversationEntry) => entry.tokens)
-      .reduce((accumulator, current) => accumulator + current, 0);
-  }
+  /**
+   * Trim conversation. Unique for each implementation.
+   */
+  abstract trimConversationContext(): void;
 }
