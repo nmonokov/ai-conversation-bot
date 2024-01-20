@@ -106,7 +106,8 @@ export abstract class OpenAi {
     });
     logger.debug({ completionResponse });
 
-    const answer = completionResponse.choices.find((choice: any) => choice.finish_details?.type === 'stop');
+    const answer = completionResponse.choices.find((choice: any) => choice.finish_reason === 'stop');
+    logger.debug({ answer });
     return answer?.message?.content || 'Failed to analyse this image.';
   }
 

@@ -23,7 +23,7 @@ export class AnalyseCommand extends ParentCommand {
       context.addBotEntry(analyseResult);
       await Promise.all([
         this._bot.sendMessage(chatId, analyseResult),
-        await this._registry.storeUserContext(context),
+        this._registry.storeUserContext(context),
       ]);
     } catch (error: any) {
       logger.error(error);

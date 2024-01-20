@@ -2,6 +2,17 @@ import axios from 'axios';
 import { PhotoData, VoiceData } from '../model';
 import { logger } from '../utils/logger';
 
+const BACKSLASH_URL_ENCODED = '%5C';
+/**
+ * Symbols which are encoded by encodeURIComponent and getting errored out in Telegram API GET request.
+ * %3D - =
+ * %2B - +
+ * %23 - #
+ * %7C - |
+ * Other symbols are not getting encoded and will be escaped as-is.
+ */
+const SPECIAL_SYMBOLS = ['_', '~', '-', '!', '(', ')', '.', '*', '%3D', '%2B', '%23', '%7C'];
+
 /**
  * Wrapper class for interacting with the Telegram Bot API.
  * Provides methods for sending messages, photos, and fetching URLs and buffers of media files.
@@ -16,13 +27,20 @@ export class TelegramBot {
   }
 
   /**
-   * Sends a text message to a chat.
+   * Sends a text message to a chat. All special symbols will be escaped with url encoded backslash in order
+   * to prevent errors on Telegram API side.
    * @param chatId - The ID of the chat to send the message to.
    * @param message - The text message to be sent.
    * @returns A Promise resolving when the message is successfully sent.
    */
   async sendMessage(chatId: number, message: string): Promise<void> {
-    const url = `${this._url}/sendMessage?chat_id=${chatId.toString()}&parse_mode=Markdown&text=${encodeURIComponent(message)}`;
+    let formattedMessage = encodeURIComponent(message);
+    SPECIAL_SYMBOLS.forEach((specialSymbol: string) => {
+        const regexp: RegExp = new RegExp(`\\${specialSymbol}`, 'g');
+        formattedMessage = formattedMessage.replace(regexp, `${BACKSLASH_URL_ENCODED}${specialSymbol}`)
+      });
+    logger.debug({ formattedMessage });
+    const url = `${this._url}/sendMessage?chat_id=${chatId.toString()}&parse_mode=MarkdownV2&text=${formattedMessage}`;
     await axios.get(url);
   }
 
